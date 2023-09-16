@@ -19,7 +19,7 @@ const HUD = preload("res://scenes/UI/HUD/HUD.tscn")
 var hud: HUD
 var GameOverSfx = preload("res://assets/audio/sfx/game_over.wav")
 var GameOverVoice = preload("res://assets/audio/sfx/you_lose.wav")
-var VictorySfx = preload("res://assets/audio/sfx/jingles_HIT04.ogg")
+var VictorySfx = preload("res://assets/audio/sfx/jingles_HIT04.wav")
 var VictoryVoice = preload("res://assets/audio/sfx/you_win.wav")
 var MusicArray = [preload("res://assets/audio/music/Luke-Bergs-Tropical-Soulmp3(chosic.com).mp3"),
 preload("res://assets/audio/music/Luke-Bergs-Dancin_Mp3(chosic.com).mp3"),
