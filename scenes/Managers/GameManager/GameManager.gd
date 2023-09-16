@@ -30,7 +30,8 @@ var gameEndSfx: AudioStreamPlayer
 var voicePlayed: bool = false
 var enableQuickExit: bool = false
 signal backToMenu
-var voiceMuted = false
+var voiceMuted: bool = false
+var sfxMuted: bool = false
 var won: bool = false
 
 # Called when the node enters the scene tree for the first time.
@@ -89,6 +90,10 @@ func muteCountdown():
 	hud.muteCountdown()
 	voiceMuted = true
 
+func muteSfx():
+	sfxMuted = true
+	grid.muteSfx()
+
 func _on_music_finished():
 	music.play()
 
@@ -110,8 +115,11 @@ func _on_gameTimer_timeout():
 	music.stop()
 	playerPiece.visible = false
 	hud.updateResult("You Lose")
-	gameEndSfx.stream = GameOverSfx
-	gameEndSfx.play()
+	if !sfxMuted:
+		gameEndSfx.stream = GameOverSfx
+		gameEndSfx.play()
+	elif !voiceMuted:
+		_on_gameEndSfx_finished()
 
 func _on_grid_victory():
 	won = true
@@ -122,8 +130,11 @@ func _on_grid_victory():
 	for i in range(1, grid.board.size(), 2):
 		grid.setCell(2, grid.get2DIndex(i))
 	hud.updateResult("You Win!")
-	gameEndSfx.stream = VictorySfx
-	gameEndSfx.play()
+	if !sfxMuted:
+		gameEndSfx.stream = VictorySfx
+		gameEndSfx.play()
+	elif !voiceMuted:
+		_on_gameEndSfx_finished()
 
 func _on_grid_clearStart():
 	gameTimer.paused = true

@@ -9,6 +9,7 @@ const Credits = preload("res://scenes/UI/Menus/Credits/Credits.tscn")
 var credits: Credits
 var muted = false
 var voiceMuted = false
+var sfxMuted = false
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
@@ -25,6 +26,8 @@ func navToGame():
 		gameManager.playMusic()
 	if voiceMuted:
 		gameManager.muteCountdown()
+	if sfxMuted:
+		gameManager.muteSfx()
 
 func navToMain():
 	remove_child(gameManager)
@@ -38,10 +41,13 @@ func navToMain():
 		mainMenu.setMuted()
 	if voiceMuted:
 		mainMenu.setVoiceMuted()
+	if sfxMuted:
+		mainMenu.setSfxMuted()
 	mainMenu.play.connect(navToGame)
 	mainMenu.exit.connect(_on_mainMenu_exit)
 	mainMenu.mute.connect(_on_mainMenu_mute)
 	mainMenu.mute_voice.connect(_on_mainMenu_mute_voice)
+	mainMenu.mute_sfx.connect(_on_mainMenu_mute_sfx)
 	mainMenu.credits.connect(_on_mainMenu_credits)
 	add_child(mainMenu)
 
@@ -54,6 +60,9 @@ func navToCredits():
 	credits = Credits.instantiate()
 	credits.back.connect(navToMain)
 	add_child(credits)
+
+func _on_mainMenu_mute_sfx():
+	sfxMuted = !sfxMuted
 
 func _on_mainMenu_mute_voice():
 	voiceMuted = !voiceMuted

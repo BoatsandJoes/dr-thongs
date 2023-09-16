@@ -8,6 +8,7 @@ const cellSize: int = 50
 var clearDelay: Timer
 var clearing: bool = false
 var remainingColors: Array[int]
+var sfxMuted: bool = false
 signal victory
 signal clearStart
 signal clearsComplete
@@ -53,8 +54,9 @@ func _ready():
 func _on_self_clearStart():
 	clearing = true
 	clearDelay.start()
-	clearSfx.stream = ClearSfxArray[randi_range(0, ClearSfxArray.size() - 1)]
-	clearSfx.play()
+	if !sfxMuted:
+		clearSfx.stream = ClearSfxArray[randi_range(0, ClearSfxArray.size() - 1)]
+		clearSfx.play()
 
 func _on_clearDelay_timeout():
 	$ClearEffect.clear()
@@ -62,6 +64,9 @@ func _on_clearDelay_timeout():
 	if !checkClears() && clearing == true:
 		clearing = false
 		emit_signal("clearsComplete")
+
+func muteSfx():
+	sfxMuted = true
 
 func getRemainingColors() -> Array[int]:
 	return remainingColors
@@ -94,15 +99,17 @@ func place(playerPiece: Piece, pieceXIndex: int, pieceYIndex: int) -> bool:
 			var cellIndex: Vector2i = Vector2i(pieceXIndex + i % 3, pieceYIndex + i / 3)
 			var flatIndex: int = getFlatIndex(cellIndex)
 			if board[flatIndex] == playerPiece.color:
-				bonkSfx.stream = BonkSfxArray[randi_range(0, BonkSfxArray.size() - 1)]
-				bonkSfx.play()
+				if !sfxMuted:
+					bonkSfx.stream = BonkSfxArray[randi_range(0, BonkSfxArray.size() - 1)]
+					bonkSfx.play()
 				return false
 			cells.append(flatIndex)
 	for cell in cells:
 		setCell(playerPiece.color, get2DIndex(cell))
 	checkClears()
 	updateRemainingColors()
-	placePieceSfx.play()
+	if !sfxMuted:
+		placePieceSfx.play()
 	return true
 
 func checkClears() -> bool:
@@ -164,8 +171,9 @@ func checkClears() -> bool:
 							start += 1
 					if !disgrace:
 						emit_signal("clearStart")
-						clearSfx.stream = ClearSfxArray[randi_range(0, ClearSfxArray.size() - 1)]
-						clearSfx.play()
+						if !sfxMuted:
+							clearSfx.stream = ClearSfxArray[randi_range(0, ClearSfxArray.size() - 1)]
+							clearSfx.play()
 						clearPieces(clear)
 						return true
 			cell = rightmostCell + 1
