@@ -1,0 +1,21 @@
+[gd_resource type="AudioBusLayout" format=3 uid="uid://lswgwetq6x84"]
+
+[resource]
+bus/1/name = &"Reduce"
+bus/1/solo = false
+bus/1/mute = false
+bus/1/bypass_fx = false
+bus/1/volume_db = -10.0443
+bus/1/send = &""
+bus/2/name = &"ReduceMore"
+bus/2/solo = false
+bus/2/mute = false
+bus/2/bypass_fx = false
+bus/2/volume_db = -11.9576
+bus/2/send = &""
+bus/3/name = &"Boost"
+bus/3/solo = false
+bus/3/mute = false
+bus/3/bypass_fx = false
+bus/3/volume_db = 2.04929
+bus/3/send = &""

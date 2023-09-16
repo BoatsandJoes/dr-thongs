@@ -1,0 +1,302 @@
+extends Node2D
+class_name GameManager
+
+const Grid = preload("res://scenes/Level/Grid/Grid.tscn")
+var grid: Grid
+const Piece = preload("res://scenes/Actors/Piece/Piece.tscn")
+var playerPiece: Piece
+var queue: Array[Piece]
+var pieceXIndex: int
+var pieceYIndex: int
+var horizontalDas: Timer
+var verticalDas: Timer
+var horizontalDirection: int = 0
+var verticalDirection: int = 0
+var previousStates: Array[SaveState] = []
+var timeElapsed: float = 0.0
+var gameTimer: Timer
+const HUD = preload("res://scenes/UI/HUD/HUD.tscn")
+var hud: HUD
+var GameOverSfx = preload("res://assets/audio/sfx/game_over.wav")
+var GameOverVoice = preload("res://assets/audio/sfx/you_lose.wav")
+var VictorySfx = preload("res://assets/audio/sfx/you_win.wav")
+var VictoryVoice = preload("res://assets/audio/sfx/winner.wav")
+var MusicArray = [preload("res://assets/audio/music/Luke-Bergs-Tropical-Soulmp3(chosic.com).mp3"),
+preload("res://assets/audio/music/Luke-Bergs-Dancin_Mp3(chosic.com).mp3"),
+preload("res://assets/audio/music/Luke-Bergs-Daybreak(chosic.com).mp3"),
+preload("res://assets/audio/music/Luke-Bergs-Feel-Lovemp3(chosic.com).mp3")]
+var music: AudioStreamPlayer
+var gameEndSfx: AudioStreamPlayer
+var voicePlayed: bool = false
+var enableQuickExit: bool = false
+signal backToMenu
+var voiceMuted = false
+
+# Called when the node enters the scene tree for the first time.
+func _ready():
+	music = AudioStreamPlayer.new()
+	music.set_bus("Reduce")
+	music.stream = MusicArray[randi_range(0, MusicArray.size() - 1)]
+	music.finished.connect(_on_music_finished)
+	add_child(music)
+	gameEndSfx = AudioStreamPlayer.new()
+	gameEndSfx.finished.connect(_on_gameEndSfx_finished)
+	add_child(gameEndSfx)
+	hud = HUD.instantiate()
+	add_child(hud)
+	randomize()
+	grid = Grid.instantiate()
+	grid.clearStart.connect(_on_grid_clearStart)
+	grid.clearsComplete.connect(_on_grid_clearsComplete)
+	grid.victory.connect(_on_grid_victory)
+	add_child(grid)
+	saveState()
+	playerPiece = Piece.instantiate()
+	playerPiece.setRandomShape(grid.getRemainingColors())
+	add_child(playerPiece)
+	pieceXIndex = grid.gridWidth / 2 - 1
+	pieceYIndex = grid.gridWidth / 2 - 1
+	drawPlayerPiecePosition()
+	queue = [Piece.instantiate(), Piece.instantiate()]
+	for piece in range(queue.size()):
+		queue[piece].setRandomShape(grid.getRemainingColors())
+		add_child(queue[piece])
+	drawQueuePosition()
+	horizontalDas = Timer.new()
+	verticalDas = Timer.new()
+	horizontalDas.autostart = false
+	verticalDas.autostart = false
+	horizontalDas.one_shot = true
+	verticalDas.one_shot = true
+	horizontalDas.wait_time = 1.0/6.0
+	verticalDas.wait_time = 1.0/6.0
+	horizontalDas.timeout.connect(_on_horizontalDas_timeout)
+	verticalDas.timeout.connect(_on_verticalDas_timeout)
+	add_child(horizontalDas)
+	add_child(verticalDas)
+	gameTimer = Timer.new()
+	gameTimer.autostart = true
+	gameTimer.one_shot = true
+	gameTimer.wait_time = 120
+	gameTimer.timeout.connect(_on_gameTimer_timeout)
+	add_child(gameTimer)
+
+func playMusic():
+	music.play()
+
+func muteCountdown():
+	hud.muteCountdown()
+	voiceMuted = true
+
+func _on_music_finished():
+	music.play()
+
+func _on_gameEndSfx_finished():
+	if !voicePlayed:
+		gameEndSfx.set_bus("Reduce")
+		if gameTimer.is_stopped():
+			if !voiceMuted:
+				gameEndSfx.stream = GameOverVoice
+		else:
+			gameEndSfx.stream = VictoryVoice
+		voicePlayed = true
+		if !voiceMuted:
+			gameEndSfx.play()
+	else:
+		voicePlayed = false
+		enableQuickExit = true
+
+func _on_gameTimer_timeout():
+	music.stop()
+	playerPiece.visible = false
+	hud.updateResult("You Lose")
+	gameEndSfx.stream = GameOverSfx
+	gameEndSfx.play()
+
+func _on_grid_victory():
+	gameTimer.paused = true
+	music.stop()
+	for i in range(0, grid.board.size(), 2):
+		grid.setCell(1, grid.get2DIndex(i))
+	for i in range(1, grid.board.size(), 2):
+		grid.setCell(2, grid.get2DIndex(i))
+	hud.updateResult("You Win!")
+	gameEndSfx.stream = VictorySfx
+	gameEndSfx.play()
+
+func _on_grid_clearStart():
+	gameTimer.paused = true
+
+func _on_grid_clearsComplete():
+	gameTimer.paused = false
+	advanceQueue()
+
+func saveState():
+	previousStates.append(SaveState.of(grid.board, timeElapsed, [])) #todo queue
+	#todo check if this state is not the latest and if not, perform a rollback
+
+func _on_horizontalDas_timeout():
+	shiftPiece(horizontalDirection, 0)
+	horizontalDas.wait_time = 1.0/60.0
+	horizontalDas.start()
+
+func _on_verticalDas_timeout():
+	shiftPiece(0, verticalDirection)
+	verticalDas.wait_time = 1.0/60.0
+	verticalDas.start()
+
+func shiftPiece(horizontal: int, vertical: int):
+	if playerPiece.visible:
+		# walls
+		var ok: bool = true
+		for i in playerPiece.getCurrentShape().size():
+			var newX = pieceXIndex + i % 3 + horizontal
+			var newY = pieceYIndex + i / 3 + vertical
+			if (playerPiece.getCurrentShape()[i]
+			&& (newX < 0 || newX >= grid.gridWidth
+			|| newY < 0 || newY >= grid.gridHeight)):
+				ok = false
+				break
+			if !ok:
+				break
+		if ok:
+			pieceXIndex += horizontal
+			pieceYIndex += vertical
+			drawPlayerPiecePosition()
+
+func spin(direction: int):
+	var ghost: Array = playerPiece.predictSpin(direction)
+	for i in ghost.size():
+		var newX = pieceXIndex + i % 3
+		var newY = pieceYIndex + i / 3
+		var shifted: bool = false
+		if ghost[i]:
+			if newX < 0:
+				shiftPiece(1, 0)
+				shifted = true
+			elif newX >= grid.gridWidth:
+				shiftPiece(-1, 0)
+				shifted = true
+			elif newY < 0:
+				shiftPiece(0, 1)
+				shifted = true
+			elif newY >= grid.gridHeight:
+				shiftPiece(0, -1)
+				shifted = true
+		if shifted:
+			break
+	#todo das to wall (very minor qol)
+	playerPiece.spin(direction)
+
+func drawPlayerPiecePosition():
+	playerPiece.position = Vector2i(pieceXIndex * grid.cellSize, pieceYIndex * grid.cellSize)
+
+func drawQueuePosition():
+	for i in queue.size():
+		queue[i].position = Vector2i((grid.gridWidth + 1) * grid.cellSize,
+		(grid.cellSize * grid.gridHeight * 1) / 2 - 4 * i * grid.cellSize)
+
+func _input(event):
+	if enableQuickExit && event.is_pressed() && !event is InputEventMouseButton:
+		emit_signal("backToMenu")
+	if event.is_action_pressed("exit") || event.is_action_pressed("start"):
+		emit_signal("backToMenu")
+	elif event.is_action_pressed("left"):
+		if horizontalDirection == 1:
+			releaseHorizontal()
+		elif horizontalDirection == 0:
+			horizontalDirection = -1
+			shiftPiece(-1, 0)
+			horizontalDas.start()
+	elif event.is_action_pressed("right"):
+		if horizontalDirection == -1:
+			releaseHorizontal()
+		elif horizontalDirection == 0:
+			horizontalDirection = 1
+			shiftPiece(1, 0)
+			horizontalDas.start()
+	elif event.is_action_pressed("up"):
+		if verticalDirection == 1:
+			releaseVertical()
+		elif verticalDirection == 0:
+			verticalDirection = -1
+			shiftPiece(0, -1)
+			verticalDas.start()
+	elif event.is_action_pressed("down"):
+		if verticalDirection == -1:
+			releaseVertical()
+		elif verticalDirection == 0:
+			verticalDirection = 1
+			shiftPiece(0, 1)
+			verticalDas.start()
+	elif event.is_action_released("left"):
+		if Input.is_action_pressed("right"):
+			horizontalDirection = 1
+			shiftPiece(1, 0)
+			horizontalDas.start()
+		else:
+			releaseHorizontal()
+	elif event.is_action_released("right"):
+		if Input.is_action_pressed("left"):
+			horizontalDirection = -1
+			shiftPiece(-1, 0)
+			horizontalDas.start()
+		else:
+			releaseHorizontal()
+	elif event.is_action_released("up"):
+		if Input.is_action_pressed("down"):
+			verticalDirection = 1
+			shiftPiece(0, 1)
+			verticalDas.start()
+		else:
+			releaseVertical()
+	elif event.is_action_released("down"):
+		if Input.is_action_pressed("up"):
+			verticalDirection = -1
+			shiftPiece(0, -1)
+			verticalDas.start()
+		else:
+			releaseVertical()
+	elif event.is_action_pressed("cw"):
+		spin(1)
+	elif event.is_action_pressed("ccw"):
+		spin(-1)
+	elif event.is_action_pressed("place") && playerPiece.visible:
+		if grid.place(playerPiece, pieceXIndex, pieceYIndex):
+			advanceQueue()
+			saveState()
+			#todo don't advance queue on clear: if a player clears two blocks then how do you track ownership of the second?
+			# The game doesn't know the difference.
+			# and if the other player adds to it and clears it, who owns it now?
+			#timeout place is another special case because I think it plays a different sound,
+			#and failed placement throws the piece away
+		else:
+			pass #todo play bzzzz sound
+
+func advanceQueue():
+	if !grid.clearing:
+		playerPiece.visible = true
+		playerPiece.setPiece(queue[0])
+		for i in queue.size() - 1:
+			queue[i].setPiece(queue[i + 1])
+		queue[queue.size() - 1].setRandomShape(grid.getRemainingColors())
+		pieceXIndex = grid.gridWidth / 2 - 1
+		pieceYIndex = grid.gridHeight / 2 - 1
+		drawPlayerPiecePosition()
+	else:
+		playerPiece.visible = false
+
+func releaseHorizontal():
+	horizontalDirection = 0
+	horizontalDas.stop()
+	horizontalDas.wait_time = 1.0/6.0
+
+func releaseVertical():
+	verticalDirection = 0
+	verticalDas.stop()
+	verticalDas.wait_time = 1.0/6.0
+
+# Called every frame. 'delta' is the elapsed time since the previous frame.
+func _process(delta):
+	timeElapsed += delta
+	hud.updateTimer(gameTimer.time_left)

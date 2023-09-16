@@ -1,0 +1,45 @@
+[gd_scene load_steps=2 format=3 uid="uid://e042srv4cetw"]
+
+[ext_resource type="Script" path="res://scenes/UI/Menus/Credits/Credits.gd" id="1_48hw7"]
+
+[node name="Credits" type="CanvasLayer"]
+script = ExtResource("1_48hw7")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 100
+theme_override_constants/margin_top = 100
+theme_override_constants/margin_right = 100
+theme_override_constants/margin_bottom = 100
+
+[node name="Label" type="Label" parent="MarginContainer"]
+layout_mode = 2
+text = "© BoatsAndJoes 2023. All rights reserved
+
+Art Lunaticker
+
+Sound effects Kenney www.kenney.nl
+
+Tropical Soul by Luke Bergs | https://soundcloud.com/bergscloud/
+Music promoted by https://www.chosic.com/free-music/all/
+Creative Commons CC BY-SA 3.0
+https://creativecommons.org/licenses/by-sa/3.0/
+
+Dancin by Luke Bergs | https://soundcloud.com/bergscloud/
+Music promoted by https://www.chosic.com/free-music/all/
+Creative Commons CC BY-SA 3.0
+https://creativecommons.org/licenses/by-sa/3.0/
+
+Feel Love by Luke Bergs | https://soundcloud.com/bergscloud/
+Music promoted by https://www.chosic.com/free-music/all/
+Creative Commons CC BY-SA 3.0
+https://creativecommons.org/licenses/by-sa/3.0/
+
+Daybreak by Luke Bergs | https://soundcloud.com/bergscloud/
+Music promoted by https://www.chosic.com/free-music/all/
+Creative Commons - Attribution-ShareAlike 3.0 Unported
+https://creativecommons.org/licenses/by-sa/3.0/"
