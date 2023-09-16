@@ -1,6 +1,8 @@
-[gd_scene load_steps=2 format=3 uid="uid://x2v3b2jhbk7l"]
+[gd_scene load_steps=4 format=3 uid="uid://x2v3b2jhbk7l"]
 
 [ext_resource type="Script" path="res://scenes/UI/Menus/MainMenu/MainMenu.gd" id="1_lq4tu"]
+[ext_resource type="Texture2D" uid="uid://orsd0goy8ho4" path="res://assets/sprites/DrThongsTitle.png" id="2_dgqiu"]
+[ext_resource type="Texture2D" uid="uid://b8yddodv1p0y2" path="res://assets/sprites/DrThongs.png" id="3_pv3o5"]
 
 [node name="MainMenu" type="CanvasLayer"]
 script = ExtResource("1_lq4tu")
@@ -22,30 +24,26 @@ alignment = 1
 
 [node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
-theme_override_constants/separation = 50
+theme_override_constants/separation = 10
 alignment = 1
 
-[node name="Labels" type="VBoxContainer" parent="MarginContainer/VBoxContainer/HBoxContainer"]
+[node name="TitleElements" type="VBoxContainer" parent="MarginContainer/VBoxContainer/HBoxContainer"]
 layout_mode = 2
+theme_override_constants/separation = 20
 
-[node name="HBoxContainer2" type="HBoxContainer" parent="MarginContainer/VBoxContainer/HBoxContainer/Labels"]
+[node name="Logo" type="TextureRect" parent="MarginContainer/VBoxContainer/HBoxContainer/TitleElements"]
 layout_mode = 2
-alignment = 2
+texture = ExtResource("2_dgqiu")
+stretch_mode = 2
 
-[node name="Title" type="Label" parent="MarginContainer/VBoxContainer/HBoxContainer/Labels/HBoxContainer2"]
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer/HBoxContainer/TitleElements"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 128
-text = "Dr. Thongs"
+alignment = 1
 
-[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer/HBoxContainer/Labels"]
+[node name="DrThongs" type="TextureRect" parent="MarginContainer/VBoxContainer/HBoxContainer/TitleElements/HBoxContainer"]
 layout_mode = 2
-alignment = 2
-
-[node name="Tagline" type="Label" parent="MarginContainer/VBoxContainer/HBoxContainer/Labels/HBoxContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_font_sizes/font_size = 32
-text = "Righter of wrongs"
+texture = ExtResource("3_pv3o5")
+stretch_mode = 2
 
 [node name="ButtonContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/HBoxContainer"]
 layout_mode = 2
@@ -55,7 +53,7 @@ theme_override_constants/separation = 25
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 64
-text = "           Play           "
+text = "         Play         "
 
 [node name="Mute" type="Button" parent="MarginContainer/VBoxContainer/HBoxContainer/ButtonContainer"]
 unique_name_in_owner = true
