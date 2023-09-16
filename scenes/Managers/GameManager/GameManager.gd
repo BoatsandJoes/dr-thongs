@@ -19,8 +19,8 @@ const HUD = preload("res://scenes/UI/HUD/HUD.tscn")
 var hud: HUD
 var GameOverSfx = preload("res://assets/audio/sfx/game_over.wav")
 var GameOverVoice = preload("res://assets/audio/sfx/you_lose.wav")
-var VictorySfx = preload("res://assets/audio/sfx/you_win.wav")
-var VictoryVoice = preload("res://assets/audio/sfx/winner.wav")
+var VictorySfx = preload("res://assets/audio/sfx/jingles_HIT04.ogg")
+var VictoryVoice = preload("res://assets/audio/sfx/you_win.wav")
 var MusicArray = [preload("res://assets/audio/music/Luke-Bergs-Tropical-Soulmp3(chosic.com).mp3"),
 preload("res://assets/audio/music/Luke-Bergs-Dancin_Mp3(chosic.com).mp3"),
 preload("res://assets/audio/music/Luke-Bergs-Daybreak(chosic.com).mp3"),
@@ -31,6 +31,7 @@ var voicePlayed: bool = false
 var enableQuickExit: bool = false
 signal backToMenu
 var voiceMuted = false
+var won: bool = false
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
@@ -95,8 +96,7 @@ func _on_gameEndSfx_finished():
 	if !voicePlayed:
 		gameEndSfx.set_bus("Reduce")
 		if gameTimer.is_stopped():
-			if !voiceMuted:
-				gameEndSfx.stream = GameOverVoice
+			gameEndSfx.stream = GameOverVoice
 		else:
 			gameEndSfx.stream = VictoryVoice
 		voicePlayed = true
@@ -114,8 +114,9 @@ func _on_gameTimer_timeout():
 	gameEndSfx.play()
 
 func _on_grid_victory():
-	gameTimer.paused = true
+	won = true
 	music.stop()
+	gameTimer.paused = true
 	for i in range(0, grid.board.size(), 2):
 		grid.setCell(1, grid.get2DIndex(i))
 	for i in range(1, grid.board.size(), 2):
@@ -128,8 +129,9 @@ func _on_grid_clearStart():
 	gameTimer.paused = true
 
 func _on_grid_clearsComplete():
-	gameTimer.paused = false
-	advanceQueue()
+	if !won:
+		gameTimer.paused = false
+		advanceQueue()
 
 func saveState():
 	previousStates.append(SaveState.of(grid.board, timeElapsed, [])) #todo queue
@@ -199,7 +201,7 @@ func drawQueuePosition():
 func _input(event):
 	if enableQuickExit && event.is_pressed() && !event is InputEventMouseButton:
 		emit_signal("backToMenu")
-	if event.is_action_pressed("exit") || event.is_action_pressed("start"):
+	elif event.is_action_pressed("exit") || event.is_action_pressed("start"):
 		emit_signal("backToMenu")
 	elif event.is_action_pressed("left"):
 		if horizontalDirection == 1:
@@ -265,13 +267,11 @@ func _input(event):
 		if grid.place(playerPiece, pieceXIndex, pieceYIndex):
 			advanceQueue()
 			saveState()
-			#todo don't advance queue on clear: if a player clears two blocks then how do you track ownership of the second?
+			#todo if a player clears two blocks then how do you track ownership of the second?
 			# The game doesn't know the difference.
 			# and if the other player adds to it and clears it, who owns it now?
 			#timeout place is another special case because I think it plays a different sound,
 			#and failed placement throws the piece away
-		else:
-			pass #todo play bzzzz sound
 
 func advanceQueue():
 	if !grid.clearing:
