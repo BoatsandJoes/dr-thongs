@@ -73,7 +73,10 @@ func getRemainingColors() -> Array[int]:
 
 func setCell(color: int, coords: Vector2i):
 	board[getFlatIndex(coords)] = color
-	$TileMap.set_cells_terrain_connect(0, [coords], 0, color - 1)
+	if color == Globals.PieceColor.Empty:
+		$TileMap.erase_cell(0, coords)
+	else:
+		$TileMap.set_cells_terrain_connect(0, [coords], color - 1, 0)
 
 func getFlatIndex(coords: Vector2i):
 	return coords.y * gridWidth + coords.x
