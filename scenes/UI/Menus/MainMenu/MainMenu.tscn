@@ -20,64 +20,56 @@ theme_override_constants/margin_bottom = 100
 
 [node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
 layout_mode = 2
+theme_override_constants/separation = 30
 alignment = 1
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="Logo" type="TextureRect" parent="MarginContainer/VBoxContainer/HBoxContainer2"]
+layout_mode = 2
+texture = ExtResource("2_dgqiu")
+stretch_mode = 2
 
 [node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 20
 alignment = 1
 
 [node name="TitleElements" type="VBoxContainer" parent="MarginContainer/VBoxContainer/HBoxContainer"]
 layout_mode = 2
 theme_override_constants/separation = 20
 
-[node name="Logo" type="TextureRect" parent="MarginContainer/VBoxContainer/HBoxContainer/TitleElements"]
-layout_mode = 2
-texture = ExtResource("2_dgqiu")
-stretch_mode = 2
-
-[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer/HBoxContainer/TitleElements"]
-layout_mode = 2
-alignment = 1
-
-[node name="DrThongs" type="TextureRect" parent="MarginContainer/VBoxContainer/HBoxContainer/TitleElements/HBoxContainer"]
+[node name="DrThongs" type="TextureRect" parent="MarginContainer/VBoxContainer/HBoxContainer/TitleElements"]
 layout_mode = 2
 texture = ExtResource("3_pv3o5")
 stretch_mode = 2
+flip_h = true
 
 [node name="ButtonContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/HBoxContainer"]
 layout_mode = 2
 theme_override_constants/separation = 25
+alignment = 1
 
 [node name="Play" type="Button" parent="MarginContainer/VBoxContainer/HBoxContainer/ButtonContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 64
-text = "         Play         "
+text = "Play!"
 
-[node name="Mute" type="Button" parent="MarginContainer/VBoxContainer/HBoxContainer/ButtonContainer"]
+[node name="Multiplayer" type="Button" parent="MarginContainer/VBoxContainer/HBoxContainer/ButtonContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 64
-text = "Mute Music"
+disabled = true
+text = " Multiplayer "
 
-[node name="MuteVoice" type="Button" parent="MarginContainer/VBoxContainer/HBoxContainer/ButtonContainer"]
+[node name="Options" type="Button" parent="MarginContainer/VBoxContainer/HBoxContainer/ButtonContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 64
-text = "Mute Voice"
-
-[node name="MuteSfx" type="Button" parent="MarginContainer/VBoxContainer/HBoxContainer/ButtonContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_font_sizes/font_size = 64
-text = "Mute SFX"
-
-[node name="Credits" type="Button" parent="MarginContainer/VBoxContainer/HBoxContainer/ButtonContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_font_sizes/font_size = 64
-text = "Credits"
+text = "Options"
 
 [node name="Exit" type="Button" parent="MarginContainer/VBoxContainer/HBoxContainer/ButtonContainer"]
 unique_name_in_owner = true

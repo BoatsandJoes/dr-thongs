@@ -1,0 +1,61 @@
+[gd_scene load_steps=2 format=3 uid="uid://ckbwx6fj3w5at"]
+
+[ext_resource type="Script" path="res://scenes/UI/Menus/Options/Options.gd" id="1_svu70"]
+
+[node name="Options" type="CanvasLayer"]
+script = ExtResource("1_svu70")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/HBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="PageTitle" type="Label" parent="MarginContainer/HBoxContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 128
+text = "Options"
+
+[node name="Options" type="VBoxContainer" parent="MarginContainer/HBoxContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="MuteMusic" type="Button" parent="MarginContainer/HBoxContainer/VBoxContainer/Options"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 64
+text = "Mute Music"
+
+[node name="MuteSfx" type="Button" parent="MarginContainer/HBoxContainer/VBoxContainer/Options"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 64
+text = "Mute SFX"
+
+[node name="MuteVoice" type="Button" parent="MarginContainer/HBoxContainer/VBoxContainer/Options"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 64
+text = "Mute Voice"
+
+[node name="Credits" type="Button" parent="MarginContainer/HBoxContainer/VBoxContainer/Options"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 64
+text = "Credits"
+
+[node name="Back" type="Button" parent="MarginContainer/HBoxContainer/VBoxContainer/Options"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 64
+text = "Back"
