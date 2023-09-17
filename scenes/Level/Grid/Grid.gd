@@ -73,7 +73,7 @@ func getRemainingColors() -> Array[int]:
 
 func setCell(color: int, coords: Vector2i):
 	board[getFlatIndex(coords)] = color
-	$TileMap.set_cell(0, coords, 0, Vector2i(color, 0), 0)
+	$TileMap.set_cells_terrain_connect(0, [coords], 0, color - 1)
 
 func getFlatIndex(coords: Vector2i):
 	return coords.y * gridWidth + coords.x
@@ -183,9 +183,6 @@ func clearPieces(cells: PackedInt32Array):
 	var color: int = board[cells[0]]
 	for i in cells:
 		var twoDimensionalIndex: Vector2i = get2DIndex(i)
-		#$TileMap.setCell(1) #todo copy to layer 2 for clear effect, OR if I can't 
-		#get the effect I want, make a new second tilemap that covers the whole 
-		#board, and basically use it as a layer.
 		$ClearEffect.set_cell(0, twoDimensionalIndex, 0, Vector2i(color, 0), 0)
 		setCell(Globals.PieceColor.Empty, twoDimensionalIndex)
 
