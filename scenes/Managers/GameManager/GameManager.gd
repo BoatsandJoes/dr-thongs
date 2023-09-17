@@ -202,11 +202,11 @@ func spin(direction: int):
 	playerPiece.spin(direction)
 
 func drawPlayerPiecePosition():
-	playerPiece.position = Vector2i(pieceXIndex * grid.cellSize, pieceYIndex * grid.cellSize)
+	playerPiece.position = Vector2i(50 + pieceXIndex * grid.cellSize, 35 + pieceYIndex * grid.cellSize)
 
 func drawQueuePosition():
 	for i in queue.size():
-		queue[i].position = Vector2i((grid.gridWidth + 1) * grid.cellSize,
+		queue[i].position = Vector2i(20 + (grid.gridWidth + 1) * grid.cellSize,
 		(grid.cellSize * grid.gridHeight * 1) / 2 - 4 * i * grid.cellSize)
 
 func _input(event):

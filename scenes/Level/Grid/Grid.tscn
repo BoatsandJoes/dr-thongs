@@ -20,9 +20,11 @@ sources/0 = SubResource("TileSetAtlasSource_2urpr")
 script = ExtResource("1_wva44")
 
 [node name="TileMap" type="TileMap" parent="."]
+position = Vector2(50, 35)
 tile_set = SubResource("TileSet_3vofo")
 format = 2
 
 [node name="ClearEffect" type="TileMap" parent="."]
+position = Vector2(50, 35)
 tile_set = SubResource("TileSet_3vofo")
 format = 2

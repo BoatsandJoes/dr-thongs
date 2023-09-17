@@ -55,3 +55,7 @@ func _on_Back_pressed():
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
 	pass
+
+func _input(event):
+	if event.is_action_pressed("exit") || event.is_action_pressed("start"):
+		_on_Back_pressed()
