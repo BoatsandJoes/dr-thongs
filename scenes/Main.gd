@@ -7,6 +7,8 @@ const MainMenu = preload("res://scenes/UI/Menus/MainMenu/MainMenu.tscn")
 var mainMenu: MainMenu
 const Credits = preload("res://scenes/UI/Menus/Credits/Credits.tscn")
 const Options = preload("res://scenes/UI/Menus/Options/Options.tscn")
+const Lobby = preload("res://scenes/UI/Menus/Lobby/Lobby.tscn")
+var lobby: Lobby
 var options: Options
 var credits: Credits
 var muted = false
@@ -34,15 +36,27 @@ func navToGame():
 func navToMain():
 	remove_child(gameManager)
 	remove_child(options)
+	remove_child(lobby)
 	if options != null:
 		options.queue_free()
 	if gameManager != null:
 		gameManager.queue_free()
+	if lobby != null:
+		lobby.queue_free()
 	mainMenu = MainMenu.instantiate()
 	mainMenu.play.connect(navToGame)
+	mainMenu.multi.connect(_on_mainMenu_multi)
 	mainMenu.options.connect(navToOptions)
 	mainMenu.exit.connect(_on_mainMenu_exit)
 	add_child(mainMenu)
+
+func _on_mainMenu_multi():
+	remove_child(mainMenu)
+	if mainMenu != null:
+		mainMenu.queue_free()
+	lobby = Lobby.instantiate()
+	lobby.back.connect(navToMain)
+	add_child(lobby)
 
 func navToOptions():
 	remove_child(credits)
