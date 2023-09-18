@@ -16,6 +16,10 @@ func unflex():
 	$AnimatedSprite2D.position = Vector2(0, 0)
 	%Speech.visible = false
 
+func lose():
+	$AnimatedSprite2D.frame = 2
+	$AnimatedSprite2D.position = Vector2(0, 212)
+
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
 	pass

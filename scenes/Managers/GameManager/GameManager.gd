@@ -120,6 +120,7 @@ func _on_gameTimer_timeout():
 	music.stop()
 	playerPiece.visible = false
 	hud.updateResult("You Lose")
+	thongs.lose()
 	if !sfxMuted:
 		gameEndSfx.stream = GameOverSfx
 		gameEndSfx.play()

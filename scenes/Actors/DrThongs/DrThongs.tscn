@@ -1,9 +1,10 @@
-[gd_scene load_steps=9 format=3 uid="uid://ryjgj3omodm3"]
+[gd_scene load_steps=10 format=3 uid="uid://ryjgj3omodm3"]
 
 [ext_resource type="Script" path="res://scenes/Actors/DrThongs/DrThongs.gd" id="1_100k7"]
 [ext_resource type="Texture2D" uid="uid://brk8o50mj87b3" path="res://assets/sprites/DrThongs2x.png" id="2_2ludv"]
 [ext_resource type="Texture2D" uid="uid://dmr45eeemd52i" path="res://assets/sprites/DrThongsFlex2x.png" id="3_h1eed"]
 [ext_resource type="Texture2D" uid="uid://b1dip00yveua3" path="res://assets/sprites/ExclaimYES.png" id="4_7kl65"]
+[ext_resource type="Texture2D" uid="uid://cqwvpqgueosf7" path="res://assets/sprites/DrThongsLose2x.png" id="4_8gnv0"]
 [ext_resource type="Texture2D" uid="uid://goqjl0o470dp" path="res://assets/sprites/ExclaimFREAKIN.png" id="5_14bn7"]
 [ext_resource type="Texture2D" uid="uid://c6ehiwuoabnlw" path="res://assets/sprites/ExclaimDOIT.png" id="6_jdso8"]
 
@@ -15,6 +16,9 @@ animations = [{
 }, {
 "duration": 1.0,
 "texture": ExtResource("3_h1eed")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_8gnv0")
 }],
 "loop": true,
 "name": &"default",
