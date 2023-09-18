@@ -59,7 +59,7 @@ func _ready():
 	playerPiece.setRandomShape(grid.getRemainingColors())
 	add_child(playerPiece)
 	thongs = DrThongs.instantiate()
-	thongs.position = Vector2(1058, 450)
+	thongs.position = Vector2(1060, 400)
 	add_child(thongs)
 	pieceXIndex = grid.gridWidth / 2 - 2
 	pieceYIndex = grid.gridWidth / 2 - 2
@@ -119,7 +119,7 @@ func _on_gameEndSfx_finished():
 func _on_gameTimer_timeout():
 	music.stop()
 	playerPiece.visible = false
-	hud.updateResult("You Lose")
+	hud.updateResult("     You Lose")
 	thongs.lose()
 	if !sfxMuted:
 		gameEndSfx.stream = GameOverSfx

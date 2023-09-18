@@ -57,6 +57,9 @@ func _ready():
 			pieceMap[color].append(i)
 			if !remainingColors.has(color):
 				remainingColors.append(color)
+	#debug cheater win
+	#pieceMap[1].append(16)
+	#remainingColors.append(1)
 	for color in pieceMap.keys():
 		setCells(color, pieceMap[color], {})
 

@@ -20,7 +20,10 @@ func muteCountdown():
 	playedCountdown = 0
 
 func updateResult(text: String):
-	%Result.text = text
+	if text == "     You Lose":
+		%Lose.text = text
+	else:
+		%Win.text = text
 
 func updateTimer(seconds: float):
 	var secondsInt = floori(seconds)

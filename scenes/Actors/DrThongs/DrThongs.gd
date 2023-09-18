@@ -18,7 +18,7 @@ func unflex():
 
 func lose():
 	$AnimatedSprite2D.frame = 2
-	$AnimatedSprite2D.position = Vector2(0, 212)
+	$AnimatedSprite2D.position = Vector2(0, 150)
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
