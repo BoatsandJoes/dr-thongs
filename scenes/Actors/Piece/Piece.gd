@@ -2,123 +2,178 @@ extends Node2D
 class_name Piece
 
 var monominoRotations: Array = [[
-	false,false,false,
-	false,true,false,
-	false,false,false
+	0,0,0,0,0,
+	0,0,1,0,0,
+	0,1,2,1,0,
+	0,0,1,0,0,
+	0,0,0,0,0
 ], [
-	false,false,false,
-	false,true,false,
-	false,false,false
+	0,0,0,0,0,
+	0,0,1,0,0,
+	0,1,2,1,0,
+	0,0,1,0,0,
+	0,0,0,0,0
 ], [
-	false,false,false,
-	false,true,false,
-	false,false,false
+	0,0,0,0,0,
+	0,0,1,0,0,
+	0,1,2,1,0,
+	0,0,1,0,0,
+	0,0,0,0,0
 ], [
-	false,false,false,
-	false,true,false,
-	false,false,false
+	0,0,0,0,0,
+	0,0,1,0,0,
+	0,1,2,1,0,
+	0,0,1,0,0,
+	0,0,0,0,0
 ]];
 var dominoRotations: Array = [[
-	false,false,false,
-	false,true,true,
-	false,false,false
+	0,0,0,0,0,
+	0,0,1,1,0,
+	0,1,2,2,1,
+	0,0,1,1,0
 ], [
-	false,false,false,
-	false,false,true,
-	false,false,true
+	0,0,0,0,0,
+	0,0,0,1,0,
+	0,0,1,2,1,
+	0,0,1,2,1,
+	0,0,0,1,0
 ], [
-	false,false,false,
-	false,false,false,
-	false,true,true
+	0,0,0,0,0,
+	0,0,0,0,0,
+	0,0,1,1,0,
+	0,1,2,2,1,
+	0,0,1,1,0
 ], [
-	false,false,false,
-	false,true,false,
-	false,true,false
+	0,0,0,0,0,
+	0,0,1,0,0,
+	0,1,2,1,0,
+	0,1,2,1,0,
+	0,0,1,0,0
 ]];
 var tRotations: Array = [[
-	false,false,false,
-	false,true,true,
-	false,true,false
+	0,0,0,0,0,
+	0,0,1,1,0,
+	0,1,2,2,1,
+	0,1,2,1,0,
+	0,0,1,0,0
 ], [
-	false,false,false,
-	false,true,true,
-	false,false,true
+	0,0,0,0,0,
+	0,0,1,1,0,
+	0,1,2,2,1,
+	0,0,1,2,1,
+	0,0,0,1,0
 ], [
-	false,false,false,
-	false,false,true,
-	false,true,true
+	0,0,0,0,0,
+	0,0,0,1,0,
+	0,0,1,2,1,
+	0,1,2,2,1,
+	0,0,1,1,0
 ], [
-	false,false,false,
-	false,true,false,
-	false,true,true
+	0,0,0,0,0,
+	0,0,1,0,0,
+	0,1,2,1,0,
+	0,1,2,2,1,
+	0,0,1,1,0
 ]];
 var iRotations: Array = [[
-	false,false,false,
-	true,true,true,
-	false,false,false
+	0,0,0,0,0,
+	0,1,1,1,0,
+	1,2,2,2,1,
+	0,1,1,1,0,
+	0,0,0,0,0
 ], [
-	false,true,false,
-	false,true,false,
-	false,true,false
+	0,0,1,0,0,
+	0,1,2,1,0,
+	0,1,2,1,0,
+	0,1,2,1,0,
+	0,0,1,0,0
 ], [
-	false,false,false,
-	true,true,true,
-	false,false,false
+	0,0,0,0,0,
+	0,1,1,1,0,
+	1,2,2,2,1,
+	0,1,1,1,0,
+	0,0,0,0,0,
 ], [
-	false,true,false,
-	false,true,false,
-	false,true,false
+	0,0,1,0,0,
+	0,1,2,1,0,
+	0,1,2,1,0,
+	0,1,2,1,0,
+	0,0,1,0,0
 ]];
 var jRotations: Array = [[
-	false,false,false,
-	true,true,true,
-	false,false,true
+	0,0,0,0,0,
+	0,1,1,1,0,
+	1,2,2,2,1,
+	0,1,1,2,1,
+	0,0,0,1,0
 ], [
-	false,true,false,
-	false,true,false,
-	true,true,false
+	0,0,1,0,0,
+	0,1,2,1,0,
+	0,1,2,1,0,
+	1,2,2,1,0,
+	0,1,1,0,0,
 ], [
-	true,false,false,
-	true,true,true,
-	false,false,false
+	0,1,0,0,0,
+	1,2,1,1,0,
+	1,2,2,2,1,
+	0,1,1,1,0,
+	0,0,0,0,0
 ], [
-	false,true,true,
-	false,true,false,
-	false,true,false
+	0,0,1,1,0,
+	0,1,2,2,1,
+	0,1,2,1,0,
+	0,1,2,1,0,
+	0,0,1,0,0
 ]];
 var lRotations: Array = [[
-	false,false,true,
-	true,true,true,
-	false,false,false
+	0,0,0,1,0,
+	0,1,1,2,1,
+	1,2,2,2,1,
+	0,1,1,1,0,
+	0,0,0,0,0
 ], [
-	false,true,false,
-	false,true,false,
-	false,true,true
+	0,0,1,0,0,
+	0,1,2,1,0,
+	0,1,2,1,0,
+	0,1,2,2,1,
+	0,0,1,1,0
 ], [
-	false,false,false,
-	true,true,true,
-	true,false,false
+	0,0,0,0,0,
+	0,1,1,1,0,
+	1,2,2,2,1,
+	1,2,1,1,0,
+	0,1,0,0,0
 ], [
-	true,true,false,
-	false,true,false,
-	false,true,false
+	0,1,1,0,0,
+	1,2,2,1,0,
+	0,1,2,1,0,
+	0,1,2,1,0,
+	0,0,1,0,0
 ]];
 var smashboyRotations: Array = [[
-	false,false,false,
-	false,true,true,
-	false,true,true
+	0,0,0,0,0,
+	0,0,1,1,0,
+	0,1,2,2,1,
+	0,1,2,2,1,
+	0,0,1,1,0
 ], [
-	false,false,false,
-	false,true,true,
-	false,true,true
+	0,0,0,0,0,
+	0,0,1,1,0,
+	0,1,2,2,1,
+	0,1,2,2,1,
+	0,0,1,1,0
 ], [
-	false,false,false,
-	false,true,true,
-	false,true,true
+	0,0,0,0,0,
+	0,0,1,1,0,
+	0,1,2,2,1,
+	0,1,2,2,1,
+	0,0,1,1,0
 ], [
-	false,false,false,
-	false,true,true,
-	false,true,true
+	0,0,0,0,0,
+	0,0,1,1,0,
+	0,1,2,2,1,
+	0,1,2,2,1,
+	0,0,1,1,0
 ]];
 var color: int
 var shapes = [self.monominoRotations, self.dominoRotations, self.tRotations, self.iRotations,
@@ -156,9 +211,9 @@ func spin(direction: int):
 
 func updateTilemap():
 	$TileMap.clear()
-	for i in 9:
-		if self.shape[state][i]:
-			$TileMap.set_cell(0, Vector2i(i % 3, i / 3), 0, Vector2i(color, 0), 0)
+	for i in self.shape[state].size():
+		if self.shape[state][i] == 2:
+			$TileMap.set_cell(0, Vector2i(i % 5, i / 5), 0, Vector2i(color, 0), 0)
 
 func getCurrentShape() -> Array:
 	return shape[state]

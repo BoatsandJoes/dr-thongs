@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3 uid="uid://d084lmx0ck63q"]
+[gd_scene load_steps=5 format=3 uid="uid://d084lmx0ck63q"]
 
 [ext_resource type="Script" path="res://scenes/Level/Grid/Grid.gd" id="1_wva44"]
 [ext_resource type="Texture2D" uid="uid://bsjda450mu33a" path="res://assets/tiles/board.png" id="2_ko0dc"]
@@ -343,19 +343,6 @@ terrain_set_3/terrain_0/name = "Terrain 0"
 terrain_set_3/terrain_0/color = Color(0.5, 0.34375, 0.25, 1)
 sources/0 = SubResource("TileSetAtlasSource_pprh4")
 
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_2urpr"]
-texture = ExtResource("2_ko0dc")
-texture_region_size = Vector2i(50, 50)
-0:0/0 = 0
-1:0/0 = 0
-2:0/0 = 0
-3:0/0 = 0
-4:0/0 = 0
-
-[sub_resource type="TileSet" id="TileSet_3vofo"]
-tile_size = Vector2i(50, 50)
-sources/0 = SubResource("TileSetAtlasSource_2urpr")
-
 [node name="Grid" type="Node2D"]
 script = ExtResource("1_wva44")
 
@@ -363,8 +350,10 @@ script = ExtResource("1_wva44")
 position = Vector2(50, 35)
 tile_set = SubResource("TileSet_f3tkh")
 format = 2
-
-[node name="ClearEffect" type="TileMap" parent="."]
-position = Vector2(50, 35)
-tile_set = SubResource("TileSet_3vofo")
-format = 2
+layer_1/name = ""
+layer_1/enabled = true
+layer_1/modulate = Color(1, 1, 1, 1)
+layer_1/y_sort_enabled = false
+layer_1/y_sort_origin = 0
+layer_1/z_index = 0
+layer_1/tile_data = PackedInt32Array()

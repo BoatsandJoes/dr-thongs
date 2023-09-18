@@ -45,11 +45,20 @@ func _ready():
 	board = []
 	board.resize(gridHeight * gridWidth)
 	remainingColors = []
+	var pieceMap: Dictionary = {
+		Globals.PieceColor.Red: [],
+		Globals.PieceColor.Green: [],
+		Globals.PieceColor.Blue: [],
+		Globals.PieceColor.Yellow: []
+	}
 	for i in board.size():
 		var color: int = randi_range(0, Globals.PieceColor.size() - 1)
-		setCell(color, get2DIndex(i))
-		if color != Globals.PieceColor.Empty && !remainingColors.has(color):
-			remainingColors.append(color)
+		if color != Globals.PieceColor.Empty:
+			pieceMap[color].append(i)
+			if !remainingColors.has(color):
+				remainingColors.append(color)
+	for color in pieceMap.keys():
+		setCells(color, pieceMap[color], {})
 
 func _on_self_clearStart():
 	clearing = true
@@ -59,7 +68,7 @@ func _on_self_clearStart():
 		clearSfx.play()
 
 func _on_clearDelay_timeout():
-	$ClearEffect.clear()
+	$TileMap.clear_layer(1)
 	checkVictory()
 	if !checkClears() && clearing == true:
 		clearing = false
@@ -71,12 +80,63 @@ func muteSfx():
 func getRemainingColors() -> Array[int]:
 	return remainingColors
 
-func setCell(color: int, coords: Vector2i):
-	board[getFlatIndex(coords)] = color
-	if color == Globals.PieceColor.Empty:
+func setCells(color: int, cells: Array, neighbors: Dictionary):
+	var coords: Array[Vector2i] = []
+	for cell in cells:
+		board[cell] = color #internal representation of the board.
+		# now update visual representation of the board.
+		coords.append(get2DIndex(cell))
+	$TileMap.set_cells_terrain_connect(0, coords, color - 1, 0)
+	#update neighbor connections by erasing them and putting them back.
+	for neighborColor in range(1, Globals.PieceColor.size()):
+		if neighbors.has(neighborColor):
+			for cell in neighbors[neighborColor]:
+				$TileMap.erase_cell(0,cell)
+			$TileMap.set_cells_terrain_connect(0, neighbors[neighborColor], neighborColor - 1, 0, 1)
+
+
+func visuallyEraseCells(coordsArray: Array[int], color: int):
+	#var top: int
+	#var bot: int
+	#var left: int
+	#var right: int
+	var clearCoords: Array[Vector2i] = []
+	for i in coordsArray.size():
+		var coords: Vector2i = get2DIndex(coordsArray[i])
 		$TileMap.erase_cell(0, coords)
-	else:
-		$TileMap.set_cells_terrain_connect(0, [coords], color - 1, 0)
+		clearCoords.append(coords)
+		#Assume coordinates are ordered left to right, top to bottom, and we're erasing more than 1 cell.
+		#if i == 0:
+		#	top = coords.y
+		#	left = coords.x
+		#elif i == coordsArray.size() - 1:
+		#	right = coords.x
+		#	bot = coords.y
+	#Update connections in area around the clear.(THERE ARE NONE, SILLY)!
+	#var borders: Array[Vector2i] = []
+	#if top != 0:
+	#	for i in range(left, right + 1):
+	#		var border = Vector2i(i, top - 1)
+	#		if board[getFlatIndex(border)] == color:
+	#			borders.append(border)
+	#if left != 0:
+	#	for i in range(top, bot + 1):
+	#		var border = Vector2i(Vector2i(left - 1, i))
+	#		if board[getFlatIndex(border)] == color:
+	#			borders.append(border)
+	#if bot != gridHeight - 1:
+	#	for i in range(left, right + 1):
+	#		var border = Vector2i(Vector2i(i, bot + 1))
+	#		if board[getFlatIndex(border)] == color:
+	#			borders.append(border)
+	#if right != gridWidth - 1:
+	#	for i in range(top, bot + 1):
+	#		var border = Vector2i(Vector2i(right + 1, i))
+	#		if board[getFlatIndex(border)] == color:
+	#			borders.append(border)
+	#$TileMap.set_cells_terrain_connect(0, borders, color - 1, 0)
+	# Clear effect
+	$TileMap.set_cells_terrain_connect(1, clearCoords, color - 1, 0)
 
 func getFlatIndex(coords: Vector2i):
 	return coords.y * gridWidth + coords.x
@@ -97,9 +157,15 @@ func updateRemainingColors():
 func place(playerPiece: Piece, pieceXIndex: int, pieceYIndex: int) -> bool:
 	var piece: Array = playerPiece.getCurrentShape()
 	var cells: Array[int] = []
+	var neighbors: Dictionary = {
+				Globals.PieceColor.Red: [],
+				Globals.PieceColor.Green: [],
+				Globals.PieceColor.Blue: [],
+				Globals.PieceColor.Yellow: []
+			}
 	for i in piece.size():
-		if piece[i]:
-			var cellIndex: Vector2i = Vector2i(pieceXIndex + i % 3, pieceYIndex + i / 3)
+		if piece[i] == 2:
+			var cellIndex: Vector2i = Vector2i(pieceXIndex + i % 5, pieceYIndex + i / 5)
 			var flatIndex: int = getFlatIndex(cellIndex)
 			if board[flatIndex] == playerPiece.color:
 				if !sfxMuted:
@@ -107,8 +173,17 @@ func place(playerPiece: Piece, pieceXIndex: int, pieceYIndex: int) -> bool:
 					bonkSfx.play()
 				return false
 			cells.append(flatIndex)
-	for cell in cells:
-		setCell(playerPiece.color, get2DIndex(cell))
+		elif piece[i] == 1:
+			#TODO update neighbors of different colors, because godot 4 won't
+			var cellIndex: Vector2i = Vector2i(pieceXIndex + i % 5, pieceYIndex + i / 5)
+			var flatIndex: int = getFlatIndex(cellIndex)
+			var color
+			if (cellIndex.x < gridWidth && cellIndex.x >= 0
+			&& cellIndex.y < gridHeight && cellIndex.y >= 0):
+				color = board[flatIndex]
+				if color != Globals.PieceColor.Empty && color != playerPiece.color:
+					neighbors[color].append(cellIndex)
+	setCells(playerPiece.color, cells, neighbors)
 	checkClears()
 	updateRemainingColors()
 	if !sfxMuted:
@@ -186,8 +261,8 @@ func clearPieces(cells: PackedInt32Array):
 	var color: int = board[cells[0]]
 	for i in cells:
 		var twoDimensionalIndex: Vector2i = get2DIndex(i)
-		$ClearEffect.set_cell(0, twoDimensionalIndex, 0, Vector2i(color, 0), 0)
-		setCell(Globals.PieceColor.Empty, twoDimensionalIndex)
+		board[i] = Globals.PieceColor.Empty
+	visuallyEraseCells(cells, color)
 
 func checkVictory():
 	for i in board.size():
@@ -198,8 +273,8 @@ func checkVictory():
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
 	if !clearDelay.is_stopped():
-		$ClearEffect.visible = ((clearDelay.time_left < 1.08 && clearDelay.time_left > 0.83)
+		$TileMap.set_layer_enabled(1, ((clearDelay.time_left < 1.08 && clearDelay.time_left > 0.83)
 		|| (clearDelay.time_left < 0.71 && clearDelay.time_left > 0.58)
 		|| (clearDelay.time_left < 0.46 && clearDelay.time_left > 0.33)
 		|| (clearDelay.time_left < 0.27 && clearDelay.time_left > 0.14)
-		|| (clearDelay.time_left < 0.07))
+		|| (clearDelay.time_left < 0.07)))

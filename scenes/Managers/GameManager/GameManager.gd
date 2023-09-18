@@ -56,8 +56,8 @@ func _ready():
 	playerPiece = Piece.instantiate()
 	playerPiece.setRandomShape(grid.getRemainingColors())
 	add_child(playerPiece)
-	pieceXIndex = grid.gridWidth / 2 - 1
-	pieceYIndex = grid.gridWidth / 2 - 1
+	pieceXIndex = grid.gridWidth / 2 - 2
+	pieceYIndex = grid.gridWidth / 2 - 2
 	drawPlayerPiecePosition()
 	queue = [Piece.instantiate(), Piece.instantiate()]
 	for piece in range(queue.size()):
@@ -125,10 +125,8 @@ func _on_grid_victory():
 	won = true
 	music.stop()
 	gameTimer.paused = true
-	for i in range(0, grid.board.size(), 2):
-		grid.setCell(1, grid.get2DIndex(i))
-	for i in range(1, grid.board.size(), 2):
-		grid.setCell(2, grid.get2DIndex(i))
+	grid.setCells(Globals.PieceColor.Red, range(0, grid.board.size(), 2), {})
+	grid.setCells(Globals.PieceColor.Green, range(1, grid.board.size(), 2), {})
 	hud.updateResult("You Win!")
 	if !sfxMuted:
 		gameEndSfx.stream = VictorySfx
@@ -163,9 +161,9 @@ func shiftPiece(horizontal: int, vertical: int):
 		# walls
 		var ok: bool = true
 		for i in playerPiece.getCurrentShape().size():
-			var newX = pieceXIndex + i % 3 + horizontal
-			var newY = pieceYIndex + i / 3 + vertical
-			if (playerPiece.getCurrentShape()[i]
+			var newX = pieceXIndex + i % 5 + horizontal
+			var newY = pieceYIndex + i / 5 + vertical
+			if (playerPiece.getCurrentShape()[i] == 2
 			&& (newX < 0 || newX >= grid.gridWidth
 			|| newY < 0 || newY >= grid.gridHeight)):
 				ok = false
@@ -180,10 +178,10 @@ func shiftPiece(horizontal: int, vertical: int):
 func spin(direction: int):
 	var ghost: Array = playerPiece.predictSpin(direction)
 	for i in ghost.size():
-		var newX = pieceXIndex + i % 3
-		var newY = pieceYIndex + i / 3
+		var newX = pieceXIndex + i % 5
+		var newY = pieceYIndex + i / 5
 		var shifted: bool = false
-		if ghost[i]:
+		if ghost[i] == 2:
 			if newX < 0:
 				shiftPiece(1, 0)
 				shifted = true
@@ -206,8 +204,8 @@ func drawPlayerPiecePosition():
 
 func drawQueuePosition():
 	for i in queue.size():
-		queue[i].position = Vector2i(20 + (grid.gridWidth + 1) * grid.cellSize,
-		(grid.cellSize * grid.gridHeight * 1) / 2 - 4 * i * grid.cellSize)
+		queue[i].position = Vector2i(20 + (grid.gridWidth) * grid.cellSize,
+		(grid.cellSize * grid.gridHeight * 1) / 2 - ((4 * i) + 1) * grid.cellSize)
 
 func _input(event):
 	if enableQuickExit && event.is_pressed() && !event is InputEventMouseButton:
@@ -291,8 +289,8 @@ func advanceQueue():
 		for i in queue.size() - 1:
 			queue[i].setPiece(queue[i + 1])
 		queue[queue.size() - 1].setRandomShape(grid.getRemainingColors())
-		pieceXIndex = grid.gridWidth / 2 - 1
-		pieceYIndex = grid.gridHeight / 2 - 1
+		pieceXIndex = grid.gridWidth / 2 - 2
+		pieceYIndex = grid.gridHeight / 2 - 2
 		drawPlayerPiecePosition()
 	else:
 		playerPiece.visible = false
