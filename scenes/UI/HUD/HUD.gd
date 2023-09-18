@@ -25,7 +25,7 @@ func updateResult(text: String):
 func updateTimer(seconds: float):
 	var secondsInt = floori(seconds)
 	if secondsInt > 59:
-		%TimerDisplay.text = str(secondsInt / 60) + ":" + pad(str(secondsInt % 60))
+		%TimerDisplay.text = " " + str(secondsInt / 60) + ":" + pad(str(secondsInt % 60))
 	else:
 		%TimerDisplay.text = "  " + str(secondsInt)
 		if secondsInt < playedCountdown && secondsInt > 0:

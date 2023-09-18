@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://scenes/Level/Grid/Grid.gd" id="1_wva44"]
 [ext_resource type="Texture2D" uid="uid://6rtpjxn6rymq" path="res://assets/ui-textures/grid.png" id="2_5c1gs"]
-[ext_resource type="Texture2D" uid="uid://c7lx25c5a3fwh" path="res://assets/ui-textures/DrThongsTitleScreen.png" id="2_fuoi8"]
+[ext_resource type="Texture2D" uid="uid://bmjnp5n6j54ft" path="res://assets/ui-textures/DrThongsTitleScreen.png" id="2_fuoi8"]
 [ext_resource type="Texture2D" uid="uid://bsjda450mu33a" path="res://assets/tiles/board.png" id="2_ko0dc"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_pprh4"]
@@ -348,10 +348,7 @@ sources/0 = SubResource("TileSetAtlasSource_pprh4")
 [node name="Grid" type="Node2D"]
 script = ExtResource("1_wva44")
 
-[node name="Node2D2" type="Node2D" parent="."]
-scale = Vector2(2, 2)
-
-[node name="beach" type="TextureRect" parent="Node2D2"]
+[node name="beach" type="TextureRect" parent="."]
 offset_right = 640.0
 offset_bottom = 360.0
 texture = ExtResource("2_fuoi8")

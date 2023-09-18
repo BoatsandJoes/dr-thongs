@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bmjnp5n6j54ft"
-path="res://.godot/imported/DrThongsTitleScreen.png-29faf0858830fdf33e67b6ef48a318dc.ctex"
+uid="uid://dmr45eeemd52i"
+path="res://.godot/imported/DrThongsFlex2x.png-8afa431547d7f803ca6f006e91df2639.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui-textures/DrThongsTitleScreen.png"
-dest_files=["res://.godot/imported/DrThongsTitleScreen.png-29faf0858830fdf33e67b6ef48a318dc.ctex"]
+source_file="res://assets/sprites/DrThongsFlex2x.png"
+dest_files=["res://.godot/imported/DrThongsFlex2x.png-8afa431547d7f803ca6f006e91df2639.ctex"]
 
 [params]
 

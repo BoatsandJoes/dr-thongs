@@ -1,9 +1,16 @@
-[gd_scene load_steps=2 format=3 uid="uid://ckbwx6fj3w5at"]
+[gd_scene load_steps=3 format=3 uid="uid://ckbwx6fj3w5at"]
 
 [ext_resource type="Script" path="res://scenes/UI/Menus/Options/Options.gd" id="1_svu70"]
+[ext_resource type="Texture2D" uid="uid://kcxjq2c8ahfx" path="res://assets/ui-textures/OptionsMenu.png" id="2_suwxc"]
 
 [node name="Options" type="CanvasLayer"]
 script = ExtResource("1_svu70")
+
+[node name="TextureRect" type="TextureRect" parent="."]
+offset_right = 40.0
+offset_bottom = 40.0
+texture = ExtResource("2_suwxc")
+stretch_mode = 2
 
 [node name="MarginContainer" type="MarginContainer" parent="."]
 anchors_preset = 15
@@ -22,6 +29,9 @@ theme_override_constants/separation = 10
 
 [node name="PageTitle" type="Label" parent="MarginContainer/HBoxContainer/VBoxContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 10
 theme_override_font_sizes/font_size = 128
 text = "Options"
 

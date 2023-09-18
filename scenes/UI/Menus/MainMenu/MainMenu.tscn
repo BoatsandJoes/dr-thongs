@@ -2,8 +2,8 @@
 
 [ext_resource type="Script" path="res://scenes/UI/Menus/MainMenu/MainMenu.gd" id="1_lq4tu"]
 [ext_resource type="Texture2D" uid="uid://orsd0goy8ho4" path="res://assets/sprites/DrThongsTitle.png" id="2_dgqiu"]
-[ext_resource type="Texture2D" uid="uid://b8yddodv1p0y2" path="res://assets/sprites/DrThongs.png" id="3_pv3o5"]
-[ext_resource type="Texture2D" uid="uid://c7lx25c5a3fwh" path="res://assets/ui-textures/DrThongsTitleScreen.png" id="4_gcuqo"]
+[ext_resource type="Texture2D" uid="uid://bmjnp5n6j54ft" path="res://assets/ui-textures/DrThongsTitleScreen.png" id="4_gcuqo"]
+[ext_resource type="Texture2D" uid="uid://brk8o50mj87b3" path="res://assets/sprites/DrThongs2x.png" id="4_ne06x"]
 
 [node name="MainMenu" type="CanvasLayer"]
 script = ExtResource("1_lq4tu")
@@ -53,7 +53,7 @@ theme_override_constants/separation = 20
 
 [node name="DrThongs" type="TextureRect" parent="MarginContainer/VBoxContainer/HBoxContainer/TitleElements"]
 layout_mode = 2
-texture = ExtResource("3_pv3o5")
+texture = ExtResource("4_ne06x")
 stretch_mode = 2
 flip_h = true
 

@@ -17,6 +17,8 @@ var timeElapsed: float = 0.0
 var gameTimer: Timer
 const HUD = preload("res://scenes/UI/HUD/HUD.tscn")
 var hud: HUD
+var DrThongs = preload("res://scenes/Actors/DrThongs/DrThongs.tscn")
+var thongs: DrThongs
 var GameOverSfx = preload("res://assets/audio/sfx/game_over.wav")
 var GameOverVoice = preload("res://assets/audio/sfx/you_lose.wav")
 var VictorySfx = preload("res://assets/audio/sfx/jingles_HIT04.wav")
@@ -56,6 +58,9 @@ func _ready():
 	playerPiece = Piece.instantiate()
 	playerPiece.setRandomShape(grid.getRemainingColors())
 	add_child(playerPiece)
+	thongs = DrThongs.instantiate()
+	thongs.position = Vector2(1058, 450)
+	add_child(thongs)
 	pieceXIndex = grid.gridWidth / 2 - 2
 	pieceYIndex = grid.gridWidth / 2 - 2
 	drawPlayerPiecePosition()
@@ -123,6 +128,7 @@ func _on_gameTimer_timeout():
 
 func _on_grid_victory():
 	won = true
+	thongs.flex()
 	music.stop()
 	gameTimer.paused = true
 	grid.setCells(Globals.PieceColor.Red, range(0, grid.board.size(), 2), {})
@@ -136,9 +142,11 @@ func _on_grid_victory():
 
 func _on_grid_clearStart():
 	gameTimer.paused = true
+	thongs.flex()
 
 func _on_grid_clearsComplete():
 	if !won:
+		thongs.unflex()
 		gameTimer.paused = false
 		advanceQueue()
 
