@@ -30,11 +30,16 @@ func updateTimer(seconds: float):
 	if secondsInt > 59:
 		%TimerDisplay.text = " " + str(secondsInt / 60) + ":" + pad(str(secondsInt % 60))
 	else:
+		if secondsInt < 0:
+			secondsInt = 0
 		%TimerDisplay.text = "  " + str(secondsInt)
 		if secondsInt < playedCountdown && secondsInt > 0:
 			countdownSfx.stream = CountdownSfx[secondsInt - 1]
 			countdownSfx.play()
-			playedCountdown = secondsInt
+			if secondsInt > 6:
+				playedCountdown = 6 #secondsInt
+			else:
+				playedCountdown = -1
 
 func pad(str: String) -> String:
 	if str.length() == 1:
