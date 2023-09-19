@@ -87,7 +87,9 @@ func _ready():
 	gameTimer.wait_time = 120
 	gameTimer.timeout.connect(_on_gameTimer_timeout)
 	add_child(gameTimer)
-	Lobby.player_loaded.rpc_id(1) # Tell the server that this peer has loaded.
+
+func start_singleplayer_game():
+	pass
 
 # Called only on the server.
 func start_multiplayer_game():

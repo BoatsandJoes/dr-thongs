@@ -14,10 +14,45 @@ var credits: Credits
 var muted = false
 var voiceMuted = false
 var sfxMuted = false
+var players_loaded = 0
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	navToMain()
+
+# Every peer will call this when they have loaded the game scene. Lobby.player_loaded.rpc_id(1)
+@rpc("any_peer", "call_local", "reliable")
+func player_loaded():
+	if multiplayer.is_server():
+		players_loaded += 1
+		if players_loaded == 2:
+			gameManager.start_multiplayer_game()
+			players_loaded = 0
+
+func _on_lobby_start(game):
+	remove_child(lobby)
+	gameManager = game
+	gameManager.ready.connect(_on_gameManager_ready)
+	add_child(gameManager)
+	if !muted:
+		gameManager.playMusic()
+	if voiceMuted:
+		gameManager.muteCountdown()
+	if sfxMuted:
+		gameManager.muteSfx()
+	lobby.queue_free()
+
+func _on_gameManager_ready():
+	player_loaded.rpc_id(1)
+
+func _on_mainMenu_multi():
+	remove_child(mainMenu)
+	if mainMenu != null:
+		mainMenu.queue_free()
+	lobby = Lobby.instantiate()
+	lobby.back.connect(navToMain)
+	lobby.start.connect(_on_lobby_start)
+	add_child(lobby)
 
 func navToGame():
 	remove_child(mainMenu)
@@ -32,6 +67,7 @@ func navToGame():
 		gameManager.muteCountdown()
 	if sfxMuted:
 		gameManager.muteSfx()
+	gameManager.start_singleplayer_game()
 
 func navToMain():
 	remove_child(gameManager)
@@ -49,14 +85,6 @@ func navToMain():
 	mainMenu.options.connect(navToOptions)
 	mainMenu.exit.connect(_on_mainMenu_exit)
 	add_child(mainMenu)
-
-func _on_mainMenu_multi():
-	remove_child(mainMenu)
-	if mainMenu != null:
-		mainMenu.queue_free()
-	lobby = Lobby.instantiate()
-	lobby.back.connect(navToMain)
-	add_child(lobby)
 
 func navToOptions():
 	remove_child(credits)

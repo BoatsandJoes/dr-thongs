@@ -5,8 +5,11 @@ var regex: RegEx
 var port: String
 var ip: String
 var hosting = false
+var GameManager = preload("res://scenes/Managers/GameManager/GameManager.tscn")
+var gameManager: GameManager
 
 signal back
+signal start(gameManager)
 # These signals can be connected to by a UI lobby scene or the game scene.
 signal player_connected(peer_id, player_info)
 signal player_disconnected(peer_id)
@@ -93,22 +96,14 @@ func create_game(port: String):
 func remove_multiplayer_peer():
 	multiplayer.multiplayer_peer = null
 
-# When the server decides to start the game from a UI scene, do Lobby.load_game.rpc(filepath)
+# When the server decides to start the game from a UI scene, do Lobby.load_game.rpc(params)
 @rpc("call_local", "reliable")
-func load_game(game_scene_path):
-	get_tree().change_scene_to_file(game_scene_path)
-
-# Every peer will call this when they have loaded the game scene.
-@rpc("any_peer", "call_local", "reliable")
-func player_loaded():
-	if multiplayer.is_server():
-		players_loaded += 1
-		if players_loaded == players.size():
-			$/root/GameManager.start_multiplayer_game()
-			players_loaded = 0
+func load_game(mode: int):
+	gameManager = GameManager.instantiate()
+	emit_signal("start", gameManager)
 
 func _on_Start_pressed():
-	load_game.rpc("res://scenes/Managers/GameManager/GameManager.tscn")
+	load_game.rpc(0) #If there's a game mode, can pass it here
 
 func _on_Host_pressed():
 	if %Port.text != null:
