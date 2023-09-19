@@ -57,5 +57,7 @@ func _process(delta):
 	pass
 
 func _input(event):
+	if !event is InputEventMouseButton:
+		get_viewport().set_input_as_handled()
 	if event.is_action_pressed("exit") || event.is_action_pressed("start"):
 		_on_Back_pressed()

@@ -5,9 +5,12 @@ class_name DrThongs
 func _ready():
 	pass # Replace with function body.
 
-func flex():
+func flexNoSpeech():
 	$AnimatedSprite2D.frame = 1
 	$AnimatedSprite2D.position = Vector2(0, -89)
+
+func flex():
+	flexNoSpeech()
 	%Speech.visible = true
 	%Speech.frame = randi_range(0, 2)
 

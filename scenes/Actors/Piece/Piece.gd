@@ -180,10 +180,23 @@ var shapes = [self.monominoRotations, self.dominoRotations, self.tRotations, sel
 self.jRotations, self.lRotations, self.smashboyRotations]
 var shape: Array
 var state: int
+var tileMap: TileMap
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
-	pass # Replace with function body.
+	tileMap = $TileMap
+
+func easy():
+	tileMap = $BigTileMap
+	$BigTileMap.visible = true
+	var trash = $TileMap
+	remove_child(trash)
+	trash.queue_free()
+
+func normal():
+	var trash = $BigTileMap
+	remove_child(trash)
+	trash.queue_free()
 
 func setShape(shape: Array, state: int, color: int):
 	self.shape = shape
@@ -210,10 +223,10 @@ func spin(direction: int):
 	updateTilemap()
 
 func updateTilemap():
-	$TileMap.clear()
+	tileMap.clear()
 	for i in self.shape[state].size():
 		if self.shape[state][i] == 2:
-			$TileMap.set_cell(0, Vector2i(i % 5, i / 5), 0, Vector2i(color, 0), 0)
+			tileMap.set_cell(0, Vector2i(i % 5, i / 5), 0, Vector2i(color, 0), 0)
 
 func getCurrentShape() -> Array:
 	return shape[state]

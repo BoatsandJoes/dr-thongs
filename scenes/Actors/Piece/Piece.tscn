@@ -1,7 +1,8 @@
-[gd_scene load_steps=5 format=3 uid="uid://bfalodaph0psj"]
+[gd_scene load_steps=8 format=3 uid="uid://bfalodaph0psj"]
 
 [ext_resource type="Script" path="res://scenes/Actors/Piece/Piece.gd" id="1_8vkav"]
 [ext_resource type="Texture2D" uid="uid://cpsyp461a1av0" path="res://assets/tiles/piece.png" id="2_be5mx"]
+[ext_resource type="Texture2D" uid="uid://wx8sbfyiye5s" path="res://assets/tiles/piece2x.png" id="2_e5hcp"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_ptmg0"]
 texture = ExtResource("2_be5mx")
@@ -16,9 +17,27 @@ texture_region_size = Vector2i(50, 50)
 tile_size = Vector2i(50, 50)
 sources/0 = SubResource("TileSetAtlasSource_ptmg0")
 
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_0p4oy"]
+texture = ExtResource("2_e5hcp")
+texture_region_size = Vector2i(100, 100)
+0:0/0 = 0
+1:0/0 = 0
+2:0/0 = 0
+3:0/0 = 0
+4:0/0 = 0
+
+[sub_resource type="TileSet" id="TileSet_1if0l"]
+tile_size = Vector2i(100, 100)
+sources/0 = SubResource("TileSetAtlasSource_0p4oy")
+
 [node name="Piece" type="Node2D"]
 script = ExtResource("1_8vkav")
 
 [node name="TileMap" type="TileMap" parent="."]
 tile_set = SubResource("TileSet_mle25")
+format = 2
+
+[node name="BigTileMap" type="TileMap" parent="."]
+tile_set = SubResource("TileSet_1if0l")
+cell_quadrant_size = 32
 format = 2
