@@ -15,7 +15,11 @@ func _ready():
 	thongs.scale = Vector2(-1, 1)
 	add_child(thongs)
 	%Mode.pressed.connect(_on_Mode_pressed)
+	%Start.pressed.connect(_on_Start_pressed)
 	%Back.pressed.connect(_on_Back_pressed)
+
+func _on_Start_pressed():
+	emit_signal("start", difficulty)
 
 func _on_Mode_pressed():
 	if difficulty == 0:
