@@ -78,7 +78,7 @@ func _ready():
 	for piece in range(queue.size()):
 		add_child(queue[piece])
 		queue[piece].setRandomShape(grid.getRemainingColors(),
-		pieceSequence[pieceSeqIndex % pieceSequence.size()])
+		pieceSequence[(pieceSeqIndex + piece + 1) % pieceSequence.size()])
 	horizontalDas = Timer.new()
 	verticalDas = Timer.new()
 	horizontalDas.autostart = false
@@ -235,8 +235,18 @@ func _on_grid_victory():
 	thongs.flex()
 	music.stop()
 	gameTimer.paused = true
-	grid.setCells(Globals.PieceColor.Red, range(0, grid.board.size(), 2), {})
-	grid.setCells(Globals.PieceColor.Green, range(1, grid.board.size(), 2), {})
+	if difficulty == 1:
+		grid.setCells(Globals.PieceColor.Red, range(0, grid.board.size(), 2), {})
+		grid.setCells(Globals.PieceColor.Green, range(1, grid.board.size(), 2), {})
+	elif difficulty == 2:
+		grid.setCells(Globals.PieceColor.Red, range(0, grid.board.size(), 3), {})
+		grid.setCells(Globals.PieceColor.Green, range(1, grid.board.size(), 3), {})
+		grid.setCells(Globals.PieceColor.Blue, range(2, grid.board.size(), 3), {})
+	elif difficulty == 0:
+		grid.setCells(Globals.PieceColor.Red, range(0, grid.board.size(), 4), {})
+		grid.setCells(Globals.PieceColor.Green, range(1, grid.board.size(), 4), {})
+		grid.setCells(Globals.PieceColor.Blue, range(2, grid.board.size(), 4), {})
+		grid.setCells(Globals.PieceColor.Yellow, range(3, grid.board.size(), 4), {})
 	hud.updateResult("You Win!")
 	if !sfxMuted:
 		gameEndSfx.stream = VictorySfx
@@ -413,11 +423,12 @@ func _input(event):
 func advanceQueue():
 	if !grid.clearing:
 		playerPiece.visible = true
-		playerPiece.setPiece(queue[0])
-		for i in queue.size() - 1:
-			queue[i].setPiece(queue[i + 1])
-		queue[queue.size() - 1].setRandomShape(grid.getRemainingColors(),
+		pieceSeqIndex += 1
+		playerPiece.setRandomShape(grid.getRemainingColors(),
 		pieceSequence[pieceSeqIndex % pieceSequence.size()])
+		for i in queue.size():
+			queue[i].setRandomShape(grid.getRemainingColors(),
+			pieceSequence[(pieceSeqIndex + i + 1) % pieceSequence.size()])
 		pieceXIndex = grid.gridWidth / 2 - 2
 		pieceYIndex = grid.gridHeight / 2 - 2
 		drawPlayerPiecePosition()
