@@ -232,7 +232,7 @@ func spin(direction: int):
 
 func drawPlayerPiecePosition():
 	if difficulty == 1:
-		playerPiece.position = Vector2i(10 + pieceXIndex * grid.cellSize, 10 + pieceYIndex * grid.cellSize)
+		playerPiece.position = Vector2i(9 + pieceXIndex * grid.cellSize, 11 + pieceYIndex * grid.cellSize)
 	else:
 		playerPiece.position = Vector2i(50 + pieceXIndex * grid.cellSize, 35 + pieceYIndex * grid.cellSize)
 
