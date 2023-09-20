@@ -1,0 +1,71 @@
+[gd_scene load_steps=3 format=3 uid="uid://dv05bq3mf6c1j"]
+
+[ext_resource type="Script" path="res://scenes/UI/Menus/Mode/Mode.gd" id="1_6djse"]
+[ext_resource type="Texture2D" uid="uid://bmjnp5n6j54ft" path="res://assets/ui-textures/DrThongsTitleScreen.png" id="2_5spn4"]
+
+[node name="Mode" type="CanvasLayer"]
+script = ExtResource("1_6djse")
+
+[node name="TextureRect" type="TextureRect" parent="."]
+offset_right = 1280.0
+offset_bottom = 720.0
+texture = ExtResource("2_5spn4")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 70
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="Label" type="Label" parent="MarginContainer/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.286275, 1, 0.917647, 1)
+theme_override_colors/font_shadow_color = Color(0.0627451, 0.635294, 0.811765, 1)
+theme_override_colors/font_outline_color = Color(0.0352941, 0.333333, 0.580392, 1)
+theme_override_constants/outline_size = 10
+theme_override_constants/shadow_outline_size = 15
+theme_override_font_sizes/font_size = 128
+text = "Difficulty"
+
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_right = 300
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="MarginContainer/VBoxContainer/MarginContainer"]
+layout_mode = 2
+alignment = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/MarginContainer/HBoxContainer2"]
+layout_mode = 2
+theme_override_constants/separation = 150
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/MarginContainer/HBoxContainer2/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 15
+
+[node name="Mode" type="Button" parent="MarginContainer/VBoxContainer/MarginContainer/HBoxContainer2/VBoxContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 64
+text = "\"\"Easy\"\""
+
+[node name="Start" type="Button" parent="MarginContainer/VBoxContainer/MarginContainer/HBoxContainer2/VBoxContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 64
+text = "Start"
+
+[node name="Back" type="Button" parent="MarginContainer/VBoxContainer/MarginContainer/HBoxContainer2/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 64
+text = "     Back     "

@@ -34,15 +34,22 @@ var enableQuickExit: bool = false
 signal backToMenu
 var voiceMuted: bool = false
 var sfxMuted: bool = false
+var musicMuted: bool = false
 var won: bool = false
+var difficulty: int = 0
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
+	pass
+
+func start_singleplayer_game():
 	music = AudioStreamPlayer.new()
 	music.set_bus("Reduce")
 	music.stream = MusicArray[randi_range(0, MusicArray.size() - 1)]
 	music.finished.connect(_on_music_finished)
 	add_child(music)
+	if !musicMuted:
+		playMusic()
 	gameEndSfx = AudioStreamPlayer.new()
 	gameEndSfx.finished.connect(_on_gameEndSfx_finished)
 	add_child(gameEndSfx)
@@ -53,21 +60,25 @@ func _ready():
 	grid.clearStart.connect(_on_grid_clearStart)
 	grid.clearsComplete.connect(_on_grid_clearsComplete)
 	grid.victory.connect(_on_grid_victory)
+	grid.difficulty = difficulty
 	add_child(grid)
+	grid.init()
 	saveState()
 	playerPiece = Piece.instantiate()
-	playerPiece.setRandomShape(grid.getRemainingColors())
 	add_child(playerPiece)
+	if difficulty == 1:
+		playerPiece.easy()
+	playerPiece.setRandomShape(grid.getRemainingColors())
 	thongs = DrThongs.instantiate()
-	thongs.position = Vector2(1060, 400)
+	thongs.position = Vector2(1066, 415)
 	add_child(thongs)
 	pieceXIndex = grid.gridWidth / 2 - 2
 	pieceYIndex = grid.gridWidth / 2 - 2
 	drawPlayerPiecePosition()
 	queue = [Piece.instantiate(), Piece.instantiate()]
 	for piece in range(queue.size()):
-		queue[piece].setRandomShape(grid.getRemainingColors())
 		add_child(queue[piece])
+		queue[piece].setRandomShape(grid.getRemainingColors())
 	drawQueuePosition()
 	horizontalDas = Timer.new()
 	verticalDas = Timer.new()
@@ -88,16 +99,19 @@ func _ready():
 	gameTimer.timeout.connect(_on_gameTimer_timeout)
 	add_child(gameTimer)
 
-func start_singleplayer_game():
-	pass
-
 # Called only on the server.
 func start_multiplayer_game():
 	# All peers are ready to receive RPCs in this scene.
 	pass
 
+func setDifficulty(difficulty: int):
+	self.difficulty = difficulty
+
 func playMusic():
 	music.play()
+
+func muteMusic():
+	musicMuted = true
 
 func muteCountdown():
 	hud.muteCountdown()
@@ -217,15 +231,20 @@ func spin(direction: int):
 	playerPiece.spin(direction)
 
 func drawPlayerPiecePosition():
-	playerPiece.position = Vector2i(50 + pieceXIndex * grid.cellSize, 35 + pieceYIndex * grid.cellSize)
+	if difficulty == 1:
+		playerPiece.position = Vector2i(10 + pieceXIndex * grid.cellSize, 10 + pieceYIndex * grid.cellSize)
+	else:
+		playerPiece.position = Vector2i(50 + pieceXIndex * grid.cellSize, 35 + pieceYIndex * grid.cellSize)
 
 func drawQueuePosition():
 	for i in queue.size():
-		queue[i].position = Vector2i(20 + (grid.gridWidth) * grid.cellSize,
-		(grid.cellSize * grid.gridHeight * 1) / 2 - ((4 * i) + 1) * grid.cellSize)
+		queue[i].position = Vector2i(26 + (13) * 50,
+		(50 * 13 * 1) / 2 - ((4 * i) + 1) * 50)
 
 func _input(event):
-	if enableQuickExit && event.is_pressed() && !event is InputEventMouseButton:
+	if !event is InputEventMouseButton:
+		get_viewport().set_input_as_handled()
+	if enableQuickExit && event.is_action_pressed("place"):
 		emit_signal("backToMenu")
 	elif event.is_action_pressed("exit") || event.is_action_pressed("start"):
 		emit_signal("backToMenu")

@@ -1,9 +1,10 @@
-[gd_scene load_steps=7 format=3 uid="uid://d084lmx0ck63q"]
+[gd_scene load_steps=8 format=3 uid="uid://d084lmx0ck63q"]
 
 [ext_resource type="Script" path="res://scenes/Level/Grid/Grid.gd" id="1_wva44"]
 [ext_resource type="Texture2D" uid="uid://6rtpjxn6rymq" path="res://assets/ui-textures/grid.png" id="2_5c1gs"]
 [ext_resource type="Texture2D" uid="uid://bmjnp5n6j54ft" path="res://assets/ui-textures/DrThongsTitleScreen.png" id="2_fuoi8"]
 [ext_resource type="Texture2D" uid="uid://bsjda450mu33a" path="res://assets/tiles/board.png" id="2_ko0dc"]
+[ext_resource type="Texture2D" uid="uid://n5x81rxq8i7c" path="res://assets/ui-textures/7grid2x.png" id="5_c6pdq"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_pprh4"]
 texture = ExtResource("2_ko0dc")
@@ -354,13 +355,22 @@ offset_bottom = 360.0
 texture = ExtResource("2_fuoi8")
 stretch_mode = 4
 
-[node name="Node2D" type="Node2D" parent="."]
+[node name="Thirteen" type="Node2D" parent="."]
+unique_name_in_owner = true
 position = Vector2(41, 26)
 
-[node name="grid" type="TextureRect" parent="Node2D"]
+[node name="grid" type="TextureRect" parent="Thirteen"]
 offset_right = 666.0
 offset_bottom = 666.0
 texture = ExtResource("2_5c1gs")
+stretch_mode = 2
+
+[node name="gridSeven" type="TextureRect" parent="."]
+unique_name_in_owner = true
+visible = false
+offset_right = 720.0
+offset_bottom = 720.0
+texture = ExtResource("5_c6pdq")
 stretch_mode = 2
 
 [node name="TileMap" type="TileMap" parent="."]

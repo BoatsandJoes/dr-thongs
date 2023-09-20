@@ -11,10 +11,13 @@ const Lobby = preload("res://scenes/UI/Menus/Lobby/Lobby.tscn")
 var lobby: Lobby
 var options: Options
 var credits: Credits
+const Mode = preload("res://scenes/UI/Menus/Mode/Mode.tscn")
+var mode: Mode
 var muted = false
 var voiceMuted = false
 var sfxMuted = false
 var players_loaded = 0
+var difficulty = 2
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
@@ -54,15 +57,37 @@ func _on_mainMenu_multi():
 	lobby.start.connect(_on_lobby_start)
 	add_child(lobby)
 
-func navToGame():
+func navToMode():
 	remove_child(mainMenu)
+	remove_child(gameManager)
 	if mainMenu != null:
 		mainMenu.queue_free()
+	if gameManager != null:
+		gameManager.queue_free()
+	mode = Mode.instantiate()
+	mode.back.connect(_on_mode_back)
+	mode.start.connect(_on_mode_start)
+	add_child(mode)
+	mode.setDifficulty(difficulty)
+
+func _on_mode_start(difficulty):
+	self.difficulty = difficulty
+	navToGame()
+
+func _on_mode_back(difficulty):
+	self.difficulty = difficulty
+	navToMain()
+
+func navToGame():
+	remove_child(mode)
+	if mode != null:
+		mode.queue_free()
 	gameManager = GameManager.instantiate()
-	gameManager.backToMenu.connect(navToMain)
+	gameManager.backToMenu.connect(navToMode)
+	gameManager.setDifficulty(difficulty)
 	add_child(gameManager)
-	if !muted:
-		gameManager.playMusic()
+	if muted:
+		gameManager.muteMusic()
 	if voiceMuted:
 		gameManager.muteCountdown()
 	if sfxMuted:
@@ -73,6 +98,9 @@ func navToMain():
 	remove_child(gameManager)
 	remove_child(options)
 	remove_child(lobby)
+	remove_child(mode)
+	if mode != null:
+		mode.queue_free()
 	if options != null:
 		options.queue_free()
 	if gameManager != null:
@@ -80,8 +108,8 @@ func navToMain():
 	if lobby != null:
 		lobby.queue_free()
 	mainMenu = MainMenu.instantiate()
-	mainMenu.play.connect(navToGame)
 	mainMenu.multi.connect(_on_mainMenu_multi)
+	mainMenu.play.connect(navToMode)
 	mainMenu.options.connect(navToOptions)
 	mainMenu.exit.connect(_on_mainMenu_exit)
 	add_child(mainMenu)

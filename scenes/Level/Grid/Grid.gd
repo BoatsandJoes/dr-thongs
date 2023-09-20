@@ -2,13 +2,14 @@ extends Node2D
 class_name Grid
 
 var board: PackedInt32Array
-const gridHeight: int = 13
-const gridWidth: int = 13
-const cellSize: int = 50
+var gridHeight: int
+var gridWidth: int
+var cellSize: int
 var clearDelay: Timer
 var clearing: bool = false
 var remainingColors: Array[int]
 var sfxMuted: bool = false
+var difficulty: int = 2
 signal victory
 signal clearStart
 signal clearsComplete
@@ -27,6 +28,38 @@ preload("res://assets/audio/sfx/jingles_STEEL13.wav")]
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
+	pass
+
+func init():
+	var trash
+	if difficulty == 1:
+		gridHeight = 7
+		gridWidth = 7
+		cellSize = 100
+		%Thirteen.visible = false
+		%gridSeven.visible = true
+		trash = %Thirteen
+		$TileMap.cell_quadrant_size = 32
+		$TileMap.tile_set.get_source(0).set_texture(
+			ImageTexture.create_from_image(Image.load_from_file("res://assets/tiles/board2x.png")))
+		$TileMap.tile_set.get_source(0).set_texture_region_size(Vector2i(100,100))
+		$TileMap.tile_set.tile_size = Vector2i(100,100)
+		$TileMap.position = Vector2i(10,10)
+	else:
+		gridHeight = 13
+		gridWidth = 13
+		cellSize = 50
+		%Thirteen.visible = true
+		%gridSeven.visible = false
+		trash = %gridSeven
+		$TileMap.cell_quadrant_size = 16
+		$TileMap.tile_set.tile_size = Vector2i(50,50)
+		$TileMap.tile_set.get_source(0).set_texture_region_size(Vector2i(50,50))
+		$TileMap.tile_set.get_source(0).set_texture(
+			ImageTexture.create_from_image(Image.load_from_file("res://assets/tiles/board.png")))
+		$TileMap.position = Vector2i(50,35)
+	remove_child(trash)
+	trash.queue_free()
 	placePieceSfx = AudioStreamPlayer.new()
 	placePieceSfx.stream = PlacePieceSfx
 	add_child(placePieceSfx)
@@ -52,7 +85,15 @@ func _ready():
 		Globals.PieceColor.Yellow: []
 	}
 	for i in board.size():
-		var color: int = randi_range(0, Globals.PieceColor.size() - 1)
+		var numColors = Globals.PieceColor.size() - 1
+		if difficulty == 2:
+			numColors -= 1
+		var color: int = randi_range(0, numColors)
+		if difficulty == 2:
+			for iter in 3:
+				if color != Globals.PieceColor.Empty:
+					#reroll to maybe get empty instead.
+					color = randi_range(0, numColors)
 		if color != Globals.PieceColor.Empty:
 			pieceMap[color].append(i)
 			if !remainingColors.has(color):
