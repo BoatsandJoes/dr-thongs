@@ -25,41 +25,37 @@ preload("res://assets/audio/sfx/jingles_PIZZI15.wav"), preload("res://assets/aud
 preload("res://assets/audio/sfx/jingles_SAX10.wav"), preload("res://assets/audio/sfx/jingles_SAX13.wav"),
 preload("res://assets/audio/sfx/jingles_STEEL02.wav"), preload("res://assets/audio/sfx/jingles_STEEL10.wav"),
 preload("res://assets/audio/sfx/jingles_STEEL13.wav")]
+var tilemap
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
-	pass
+	tilemap = $TileMap
 
 func init():
 	var trash
+	var trash2
 	if difficulty == 1:
+		trash2 = $TileMap
+		tilemap = $BigTileMap
 		gridHeight = 7
 		gridWidth = 7
 		cellSize = 100
 		%Thirteen.visible = false
 		%gridSeven.visible = true
 		trash = %Thirteen
-		$TileMap.cell_quadrant_size = 32
-		$TileMap.tile_set.get_source(0).set_texture(
-			ImageTexture.create_from_image(Image.load_from_file("res://assets/tiles/board2x.png")))
-		$TileMap.tile_set.get_source(0).set_texture_region_size(Vector2i(100,100))
-		$TileMap.tile_set.tile_size = Vector2i(100,100)
-		$TileMap.position = Vector2i(10,10)
 	else:
+		trash2 = $BigTileMap
+		tilemap = tilemap
 		gridHeight = 13
 		gridWidth = 13
 		cellSize = 50
 		%Thirteen.visible = true
 		%gridSeven.visible = false
 		trash = %gridSeven
-		$TileMap.cell_quadrant_size = 16
-		$TileMap.tile_set.tile_size = Vector2i(50,50)
-		$TileMap.tile_set.get_source(0).set_texture_region_size(Vector2i(50,50))
-		$TileMap.tile_set.get_source(0).set_texture(
-			ImageTexture.create_from_image(Image.load_from_file("res://assets/tiles/board.png")))
-		$TileMap.position = Vector2i(50,35)
 	remove_child(trash)
+	remove_child(trash2)
 	trash.queue_free()
+	trash2.queue_free()
 	placePieceSfx = AudioStreamPlayer.new()
 	placePieceSfx.stream = PlacePieceSfx
 	add_child(placePieceSfx)
@@ -112,7 +108,7 @@ func _on_self_clearStart():
 		clearSfx.play()
 
 func _on_clearDelay_timeout():
-	$TileMap.clear_layer(1)
+	tilemap.clear_layer(1)
 	checkVictory()
 	if !checkClears() && clearing == true:
 		clearing = false
@@ -130,13 +126,13 @@ func setCells(color: int, cells: Array, neighbors: Dictionary):
 		board[cell] = color #internal representation of the board.
 		# now update visual representation of the board.
 		coords.append(get2DIndex(cell))
-	$TileMap.set_cells_terrain_connect(0, coords, color - 1, 0)
+	tilemap.set_cells_terrain_connect(0, coords, color - 1, 0)
 	#update neighbor connections by erasing them and putting them back.
 	for neighborColor in range(1, Globals.PieceColor.size()):
 		if neighbors.has(neighborColor):
 			for cell in neighbors[neighborColor]:
-				$TileMap.erase_cell(0,cell)
-			$TileMap.set_cells_terrain_connect(0, neighbors[neighborColor], neighborColor - 1, 0, 1)
+				tilemap.erase_cell(0,cell)
+			tilemap.set_cells_terrain_connect(0, neighbors[neighborColor], neighborColor - 1, 0, 1)
 
 
 func visuallyEraseCells(coordsArray: Array[int], color: int):
@@ -147,7 +143,7 @@ func visuallyEraseCells(coordsArray: Array[int], color: int):
 	var clearCoords: Array[Vector2i] = []
 	for i in coordsArray.size():
 		var coords: Vector2i = get2DIndex(coordsArray[i])
-		$TileMap.erase_cell(0, coords)
+		tilemap.erase_cell(0, coords)
 		clearCoords.append(coords)
 		#Assume coordinates are ordered left to right, top to bottom, and we're erasing more than 1 cell.
 		#if i == 0:
@@ -178,9 +174,9 @@ func visuallyEraseCells(coordsArray: Array[int], color: int):
 	#		var border = Vector2i(Vector2i(right + 1, i))
 	#		if board[getFlatIndex(border)] == color:
 	#			borders.append(border)
-	#$TileMap.set_cells_terrain_connect(0, borders, color - 1, 0)
+	#tilemap.set_cells_terrain_connect(0, borders, color - 1, 0)
 	# Clear effect
-	$TileMap.set_cells_terrain_connect(1, clearCoords, color - 1, 0)
+	tilemap.set_cells_terrain_connect(1, clearCoords, color - 1, 0)
 
 func getFlatIndex(coords: Vector2i):
 	return coords.y * gridWidth + coords.x
@@ -317,7 +313,7 @@ func checkVictory():
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
 	if !clearDelay.is_stopped():
-		$TileMap.set_layer_enabled(1, ((clearDelay.time_left < 1.08 && clearDelay.time_left > 0.83)
+		tilemap.set_layer_enabled(1, ((clearDelay.time_left < 1.08 && clearDelay.time_left > 0.83)
 		|| (clearDelay.time_left < 0.71 && clearDelay.time_left > 0.58)
 		|| (clearDelay.time_left < 0.46 && clearDelay.time_left > 0.33)
 		|| (clearDelay.time_left < 0.27 && clearDelay.time_left > 0.14)
