@@ -9,7 +9,7 @@ var clearDelay: Timer
 var clearing: bool = false
 var remainingColors: Array[int]
 var sfxMuted: bool = false
-var difficulty: int = 1
+var difficulty: int = 2
 signal victory
 signal clearStart
 signal clearsComplete
@@ -85,7 +85,15 @@ func init():
 		Globals.PieceColor.Yellow: []
 	}
 	for i in board.size():
-		var color: int = randi_range(0, Globals.PieceColor.size() - 1)
+		var numColors = Globals.PieceColor.size() - 1
+		if difficulty == 2:
+			numColors -= 1
+		var color: int = randi_range(0, numColors)
+		if difficulty == 2:
+			for iter in 3:
+				if color != Globals.PieceColor.Empty:
+					#reroll to maybe get empty instead.
+					color = randi_range(0, numColors)
 		if color != Globals.PieceColor.Empty:
 			pieceMap[color].append(i)
 			if !remainingColors.has(color):

@@ -6,7 +6,7 @@ signal start(difficulty)
 
 var DrThongs = preload("res://scenes/Actors/DrThongs/DrThongs.tscn")
 var thongs: DrThongs
-var difficulty = 1
+var difficulty = 2
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
@@ -18,10 +18,20 @@ func _ready():
 	%Back.pressed.connect(_on_Back_pressed)
 
 func _on_Mode_pressed():
-	if %Mode.text == "Hard!!!":
+	if difficulty == 0:
+		setDifficulty(2)
+	elif difficulty == 2:
 		setDifficulty(1)
 	else:
 		setDifficulty(0)
+
+func cycleModeBackwards():
+	if difficulty == 0:
+		setDifficulty(1)
+	elif difficulty == 2:
+		setDifficulty(0)
+	else:
+		setDifficulty(2)
 
 func _on_Back_pressed():
 	emit_signal("back", difficulty)
@@ -29,11 +39,14 @@ func _on_Back_pressed():
 func setDifficulty(difficulty):
 	self.difficulty = difficulty
 	if self.difficulty == 1:
-		%Mode.text = "\"\"Easy\"\""
+		%Mode.text = "\"\"\"Easy\"\"\""
+		thongs.unflex()
+	elif difficulty == 2:
+		%Mode.text = "Hard"
 		thongs.flexNoSpeech()
 	else:
 		thongs.lose()
-		%Mode.text = "Hard!!!"
+		%Mode.text = "Very Hard"
 
 func _input(event):
 	if !event is InputEventMouseButton:
@@ -42,9 +55,10 @@ func _input(event):
 		emit_signal("back", difficulty)
 	elif event.is_action_pressed("place"):
 		emit_signal("start", difficulty)
-	elif (event.is_action_pressed("ccw") || event.is_action_pressed("cw") || event.is_action_pressed("left")
-	|| event.is_action_pressed("right") || event.is_action_pressed("up") || event.is_action_pressed("down")):
+	elif ( event.is_action_pressed("cw") || event.is_action_pressed("right") || event.is_action_pressed("down")):
 		_on_Mode_pressed()
+	elif (event.is_action_pressed("ccw") || event.is_action_pressed("left") || event.is_action_pressed("up")):
+		cycleModeBackwards()
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):

@@ -14,7 +14,7 @@ var mode: Mode
 var muted = false
 var voiceMuted = false
 var sfxMuted = false
-var difficulty = 1
+var difficulty = 2
 
 # Called when the node enters the scene tree for the first time.
 func _ready():

@@ -13,11 +13,10 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/margin_left = 50
 theme_override_constants/margin_top = 50
-theme_override_constants/margin_right = 50
 
 [node name="HBoxContainer2" type="HBoxContainer" parent="MarginContainer"]
 layout_mode = 2
-theme_override_constants/separation = 130
+theme_override_constants/separation = 120
 
 [node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/HBoxContainer2"]
 layout_mode = 2
