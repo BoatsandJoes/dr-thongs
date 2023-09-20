@@ -214,7 +214,7 @@ func setRandomShape(colors: Array[int], seq):
 	if colors.size() > 0:
 		var pickColor: int
 		for order in seq.color_order:
-			if colors.has(order):
+			if colors.has(order): #xxx
 				pickColor = order
 				break
 		setShape(shapes[seq.shape], seq.state, pickColor)

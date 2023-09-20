@@ -148,23 +148,46 @@ func loadMultiplayer():
 func start_multiplayer_game():
 	# All peers are ready to receive RPCs in this scene.
 	setUpMusic.rpc(randi_range(0, MusicArray.size() - 1))
-	syncStateClient.rpc(pieceSequence, grid.board)
+	syncStateClient.rpc(JSON.stringify({"pieceSeq": pieceSequence, "board": grid.board}))
+
+func pieceSeqDictFixTypes(seq: Array)->Array:
+	for i in seq:
+		i.shape = int(i.shape)
+		i.state = int(i.state)
+		var order = PackedInt32Array()
+		for j in i.color_order:
+			order.append(int(j))
+		i.color_order = order
+	return seq
+
+func floatArrayToPackedInt32(array: Array)->PackedInt32Array:
+	var result = PackedInt32Array()
+	for i in array:
+		result.append(int(i))
+	return result
 
 @rpc("authority","call_remote","reliable")
-func syncStateClient(pieceSeq: Array, board: PackedInt32Array):
-	grid.updateBoard(board)
-	ghostSeq = pieceSeq
+func syncStateClient(json: String):
+	var result = JSON.parse_string(json)
+	grid.updateBoard(floatArrayToPackedInt32(result["board"]))
+	ghostSeq = pieceSeqDictFixTypes(result["pieceSeq"])
 	ghostPiece.setRandomShape(grid.getRemainingColors(),
 	ghostSeq[ghostSeqIndex % ghostSeq.size()])
+	ghostPieceYIndex = grid.gridWidth / 2 - 2
+	ghostPieceXIndex = grid.gridWidth / 2 - 2 - 3
+	updateGhostPosition()
 	timeElapsed = 0.0
 	saveState()
-	syncStateServer.rpc(pieceSequence)
+	syncStateServer.rpc(JSON.stringify({"pieceSeq": pieceSequence}))
 
 @rpc("any_peer","call_remote","reliable")
-func syncStateServer(pieceSeq: Array):
-	ghostSeq = pieceSeq
+func syncStateServer(pieceSeq: String):
+	ghostSeq = pieceSeqDictFixTypes(JSON.parse_string(pieceSeq)["pieceSeq"])
 	ghostPiece.setRandomShape(grid.getRemainingColors(),
 	ghostSeq[ghostSeqIndex % ghostSeq.size()])
+	ghostPieceYIndex = grid.gridWidth / 2 - 2
+	ghostPieceXIndex = grid.gridWidth / 2 - 2 + 3
+	updateGhostPosition()
 	timeElapsed = 0.0
 	saveState()
 	#test ping
