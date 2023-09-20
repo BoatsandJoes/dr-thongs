@@ -5,11 +5,14 @@ const Grid = preload("res://scenes/Level/Grid/Grid.tscn")
 var grid: Grid
 const Piece = preload("res://scenes/Actors/Piece/Piece.tscn")
 var playerPiece: Piece
+var ghostPiece: Piece
 var queue: Array[Piece]
-var pieceSequence: Array[PieceSequence]
+var pieceSequence: Array
 var pieceSeqIndex: int = 0
-var ghostSeq: Array[PieceSequence]
+var ghostSeq: Array
 var ghostSeqIndex: int = 0
+var ghostPieceXIndex: int
+var ghostPieceYIndex: int
 var pieceXIndex: int
 var pieceYIndex: int
 var horizontalDas: Timer
@@ -66,6 +69,9 @@ func _ready():
 	grid.difficulty = difficulty
 	add_child(grid)
 	grid.init()
+	ghostPiece = Piece.instantiate()
+	ghostPiece.set_modulate(Color(0,0,0,0.5))
+	add_child(ghostPiece)
 	playerPiece = Piece.instantiate()
 	add_child(playerPiece)
 	if difficulty == 1:
@@ -110,6 +116,8 @@ func setUpMusic(track: int):
 		playMusic()
 
 func start_singleplayer_game():
+	remove_child(ghostPiece)
+	ghostPiece.queue_free
 	setUpMusic(randi_range(0, MusicArray.size() - 1))
 	thongs = DrThongs.instantiate()
 	thongs.position = Vector2(1066, 415)
@@ -143,16 +151,20 @@ func start_multiplayer_game():
 	syncStateClient.rpc(pieceSequence, grid.board)
 
 @rpc("authority","call_remote","reliable")
-func syncStateClient(pieceSeq: Array[PieceSequence], board: PackedInt32Array):
+func syncStateClient(pieceSeq: Array, board: PackedInt32Array):
 	grid.updateBoard(board)
 	ghostSeq = pieceSeq
+	ghostPiece.setRandomShape(grid.getRemainingColors(),
+	ghostSeq[ghostSeqIndex % ghostSeq.size()])
 	timeElapsed = 0.0
 	saveState()
-	syncStateServer.rpc()
+	syncStateServer.rpc(pieceSequence)
 
 @rpc("any_peer","call_remote","reliable")
-func syncStateServer(pieceSeq: Array[PieceSequence]):
+func syncStateServer(pieceSeq: Array):
 	ghostSeq = pieceSeq
+	ghostPiece.setRandomShape(grid.getRemainingColors(),
+	ghostSeq[ghostSeqIndex % ghostSeq.size()])
 	timeElapsed = 0.0
 	saveState()
 	#test ping
@@ -295,7 +307,30 @@ func shiftPiece(horizontal: int, vertical: int):
 		if ok:
 			pieceXIndex += horizontal
 			pieceYIndex += vertical
+			if multiFlag:
+				if horizontal != 0:
+					moveGhostX.rpc(pieceXIndex)
+				if vertical != 0:
+					moveGhostY.rpc(pieceYIndex)
 			drawPlayerPiecePosition()
+
+@rpc("any_peer", "call_remote", "unreliable_ordered")
+func rotateGhost(newState: int):
+	ghostPiece.setSpin(newState)
+
+@rpc("any_peer", "call_remote", "unreliable_ordered")
+func moveGhostX(newX: int):
+	ghostPieceXIndex = newX
+	updateGhostPosition()
+
+@rpc("any_peer", "call_remote", "unreliable_ordered")
+func moveGhostY(newY: int):
+	ghostPieceYIndex = newY
+	updateGhostPosition()
+
+func updateGhostPosition():
+	ghostPiece.position = Vector2i(50 + ghostPieceXIndex * grid.cellSize,
+		35 + ghostPieceYIndex * grid.cellSize)
 
 func spin(direction: int):
 	var ghost: Array = playerPiece.predictSpin(direction)
@@ -320,6 +355,8 @@ func spin(direction: int):
 			break
 	#todo das to wall (very minor qol)
 	playerPiece.spin(direction)
+	if multiFlag:
+		rotateGhost.rpc(playerPiece.state)
 
 func drawPlayerPiecePosition():
 	if multiFlag: #todo

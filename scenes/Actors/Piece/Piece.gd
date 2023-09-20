@@ -210,7 +210,7 @@ func setPiece(piece: Piece):
 	self.color = piece.color
 	updateTilemap()
 
-func setRandomShape(colors: Array[int], seq: PieceSequence):
+func setRandomShape(colors: Array[int], seq):
 	if colors.size() > 0:
 		var pickColor: int
 		for order in seq.color_order:
@@ -224,6 +224,10 @@ func predictSpin(direction: int) -> Array:
 
 func spin(direction: int):
 	state = (state + direction) % 4
+	updateTilemap()
+
+func setSpin(newState: int):
+	state = newState
 	updateTilemap()
 
 func updateTilemap():

@@ -5,8 +5,8 @@ var color_order: PackedInt32Array
 var shape: int
 var state: int
 
-static func getRandom() -> PieceSequence:
-	var result = PieceSequence.new()
+static func getRandom() -> Dictionary:
+	var result = {"color_order": null, "shape": 0, "state": 0}
 	result.shape = randi_range(0, 6)
 	result.state = randi_range(0, 3)
 	result.color_order = PackedInt32Array()
