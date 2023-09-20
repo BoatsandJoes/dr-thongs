@@ -71,12 +71,14 @@ func _ready():
 	if difficulty == 1:
 		playerPiece.easy()
 	generatePieceSequence()
-	playerPiece.setRandomShape(grid.getRemainingColors(), pieceSequence[pieceSeqIndex % pieceSequence.size()])
+	playerPiece.setRandomShape(grid.getRemainingColors(),
+	pieceSequence[pieceSeqIndex % pieceSequence.size()])
 	pieceYIndex = grid.gridWidth / 2 - 2
 	queue = [Piece.instantiate(), Piece.instantiate()]
 	for piece in range(queue.size()):
 		add_child(queue[piece])
-		queue[piece].setRandomShape(grid.getRemainingColors(), pieceSequence[pieceSeqIndex % pieceSequence.size()])
+		queue[piece].setRandomShape(grid.getRemainingColors(),
+		pieceSequence[pieceSeqIndex % pieceSequence.size()])
 	horizontalDas = Timer.new()
 	verticalDas = Timer.new()
 	horizontalDas.autostart = false
@@ -311,12 +313,15 @@ func spin(direction: int):
 
 func drawPlayerPiecePosition():
 	if multiFlag: #todo
-		playerPiece.position = Vector2i(50 + pieceXIndex * grid.cellSize, 35 + pieceYIndex * grid.cellSize)
+		playerPiece.position = Vector2i(50 + pieceXIndex * grid.cellSize,
+		35 + pieceYIndex * grid.cellSize)
 	else:
 		if difficulty == 1:
-			playerPiece.position = Vector2i(9 + pieceXIndex * grid.cellSize, 11 + pieceYIndex * grid.cellSize)
+			playerPiece.position = Vector2i(9 + pieceXIndex * grid.cellSize,
+			11 + pieceYIndex * grid.cellSize)
 		else:
-			playerPiece.position = Vector2i(50 + pieceXIndex * grid.cellSize, 35 + pieceYIndex * grid.cellSize)
+			playerPiece.position = Vector2i(50 + pieceXIndex * grid.cellSize,
+			35 + pieceYIndex * grid.cellSize)
 
 func drawQueuePosition():
 	if multiFlag:
@@ -411,7 +416,8 @@ func advanceQueue():
 		playerPiece.setPiece(queue[0])
 		for i in queue.size() - 1:
 			queue[i].setPiece(queue[i + 1])
-		queue[queue.size() - 1].setRandomShape(grid.getRemainingColors(), pieceSequence[pieceSeqIndex % pieceSequence.size()])
+		queue[queue.size() - 1].setRandomShape(grid.getRemainingColors(),
+		pieceSequence[pieceSeqIndex % pieceSequence.size()])
 		pieceXIndex = grid.gridWidth / 2 - 2
 		pieceYIndex = grid.gridHeight / 2 - 2
 		drawPlayerPiecePosition()

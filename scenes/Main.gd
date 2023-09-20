@@ -36,7 +36,7 @@ func _on_lobby_start(game):
 	remove_child(lobby)
 	gameManager = game
 	gameManager.loaded_multiplayer.connect(_on_gameManager_loaded_multiplayer)
-	add_child(gameManager)
+	add_child(gameManager, true)
 	if muted:
 		gameManager.muteMusic()
 	if voiceMuted:
@@ -56,7 +56,7 @@ func _on_mainMenu_multi():
 	lobby = Lobby.instantiate()
 	lobby.back.connect(navToMain)
 	lobby.start.connect(_on_lobby_start)
-	add_child(lobby)
+	add_child(lobby, true)
 
 func navToMode():
 	remove_child(mainMenu)
