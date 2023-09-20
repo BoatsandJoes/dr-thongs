@@ -120,6 +120,25 @@ func muteSfx():
 func getRemainingColors() -> Array[int]:
 	return remainingColors
 
+func updateBoard(board: PackedInt32Array):
+	tilemap.clear()
+	board.fill(Globals.PieceColor.Empty)
+	remainingColors.clear()
+	var pieceMap: Dictionary = {
+		Globals.PieceColor.Red: [],
+		Globals.PieceColor.Green: [],
+		Globals.PieceColor.Blue: [],
+		Globals.PieceColor.Yellow: []
+	}
+	for i in board.size():
+		var color = board[i]
+		if color != Globals.PieceColor.Empty:
+			pieceMap[color].append(i)
+			if !remainingColors.has(color):
+				remainingColors.append(color)
+	for color in pieceMap.keys():
+		setCells(color, pieceMap[color], {})
+
 func setCells(color: int, cells: Array, neighbors: Dictionary):
 	var coords: Array[Vector2i] = []
 	for cell in cells:

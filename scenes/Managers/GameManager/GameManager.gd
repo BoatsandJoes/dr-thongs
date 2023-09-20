@@ -6,6 +6,10 @@ var grid: Grid
 const Piece = preload("res://scenes/Actors/Piece/Piece.tscn")
 var playerPiece: Piece
 var queue: Array[Piece]
+var pieceSequence: Array[PieceSequence]
+var pieceSeqIndex: int = 0
+var ghostSeq: Array[PieceSequence]
+var ghostSeqIndex: int = 0
 var pieceXIndex: int
 var pieceYIndex: int
 var horizontalDas: Timer
@@ -39,6 +43,9 @@ var musicMuted: bool = false
 var won: bool = false
 var difficulty: int = 0
 var multiFlag = false
+var pingTimer: Timer
+var pingTestTimeElapsed: float
+var pingTestCount: int = 0
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
@@ -63,12 +70,13 @@ func _ready():
 	add_child(playerPiece)
 	if difficulty == 1:
 		playerPiece.easy()
-	playerPiece.setRandomShape(grid.getRemainingColors())
+	generatePieceSequence()
+	playerPiece.setRandomShape(grid.getRemainingColors(), pieceSequence[pieceSeqIndex % pieceSequence.size()])
 	pieceYIndex = grid.gridWidth / 2 - 2
 	queue = [Piece.instantiate(), Piece.instantiate()]
 	for piece in range(queue.size()):
 		add_child(queue[piece])
-		queue[piece].setRandomShape(grid.getRemainingColors())
+		queue[piece].setRandomShape(grid.getRemainingColors(), pieceSequence[pieceSeqIndex % pieceSequence.size()])
 	horizontalDas = Timer.new()
 	verticalDas = Timer.new()
 	horizontalDas.autostart = false
@@ -88,6 +96,11 @@ func _ready():
 	gameTimer.timeout.connect(_on_gameTimer_timeout)
 	add_child(gameTimer)
 
+func generatePieceSequence():
+	pieceSequence = []
+	for i in 180:
+		pieceSequence.append(PieceSequence.getRandom())
+
 @rpc("authority", "call_local", "reliable")
 func setUpMusic(track: int):
 	music.stream = MusicArray[track]
@@ -105,12 +118,18 @@ func start_singleplayer_game():
 	gameTimer.start()
 
 func loadMultiplayer():
+	pingTimer = Timer.new()
+	pingTimer.autostart = false
+	pingTimer.one_shot = true
+	pingTimer.timeout.connect(_on_pingTimer_timeout)
+	add_child(pingTimer)
 	multiFlag = true
 	if multiplayer.is_server():
 		pieceXIndex = grid.gridWidth / 2 - 2 - 3
 	else:
 		pieceXIndex = grid.gridWidth / 2 - 2 + 3
 	drawPlayerPiecePosition()
+	playerPiece.visible = false
 	drawQueuePosition()
 	#TODO load the two doctors
 	emit_signal("loaded_multiplayer")
@@ -119,8 +138,50 @@ func loadMultiplayer():
 func start_multiplayer_game():
 	# All peers are ready to receive RPCs in this scene.
 	setUpMusic.rpc(randi_range(0, MusicArray.size() - 1))
-	#todo sync state
-	#todo start both timers
+	syncStateClient.rpc(pieceSequence, grid.board)
+
+@rpc("authority","call_remote","reliable")
+func syncStateClient(pieceSeq: Array[PieceSequence], board: PackedInt32Array):
+	grid.updateBoard(board)
+	ghostSeq = pieceSeq
+	timeElapsed = 0.0
+	saveState()
+	syncStateServer.rpc()
+
+@rpc("any_peer","call_remote","reliable")
+func syncStateServer(pieceSeq: Array[PieceSequence]):
+	ghostSeq = pieceSeq
+	timeElapsed = 0.0
+	saveState()
+	#test ping
+	pingTestTimeElapsed = timeElapsed
+	testPing.rpc()
+
+@rpc("authority", "call_remote", "reliable")
+func testPing():
+	testPong.rpc_id(1)
+
+@rpc("any_peer", "call_remote", "reliable")
+func testPong():
+	pingTestCount += 1
+	if pingTestCount == 5:
+		pingTestTimeElapsed = timeElapsed - pingTestTimeElapsed
+		startTimer.rpc(pingTestTimeElapsed / 10.0) #/5 because 5 tests, and /2 because round trip
+	else:
+		testPing.rpc()
+
+@rpc("authority", "call_local", "reliable")
+func startTimer(halfPing: float):
+	if multiplayer.is_server():
+		pingTimer.wait_time = halfPing
+		pingTimer.start()
+	else:
+		_on_pingTimer_timeout()
+
+func _on_pingTimer_timeout():
+	timeElapsed = 0
+	gameTimer.start()
+	playerPiece.visible = true
 
 func setDifficulty(difficulty: int):
 	self.difficulty = difficulty
@@ -350,7 +411,7 @@ func advanceQueue():
 		playerPiece.setPiece(queue[0])
 		for i in queue.size() - 1:
 			queue[i].setPiece(queue[i + 1])
-		queue[queue.size() - 1].setRandomShape(grid.getRemainingColors())
+		queue[queue.size() - 1].setRandomShape(grid.getRemainingColors(), pieceSequence[pieceSeqIndex % pieceSequence.size()])
 		pieceXIndex = grid.gridWidth / 2 - 2
 		pieceYIndex = grid.gridHeight / 2 - 2
 		drawPlayerPiecePosition()
