@@ -32,24 +32,20 @@ var gameEndSfx: AudioStreamPlayer
 var voicePlayed: bool = false
 var enableQuickExit: bool = false
 signal backToMenu
+signal loaded_multiplayer
 var voiceMuted: bool = false
 var sfxMuted: bool = false
 var musicMuted: bool = false
 var won: bool = false
 var difficulty: int = 0
+var multiFlag = false
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
-	pass
-
-func start_singleplayer_game():
 	music = AudioStreamPlayer.new()
 	music.set_bus("Reduce")
-	music.stream = MusicArray[randi_range(0, MusicArray.size() - 1)]
 	music.finished.connect(_on_music_finished)
 	add_child(music)
-	if !musicMuted:
-		playMusic()
 	gameEndSfx = AudioStreamPlayer.new()
 	gameEndSfx.finished.connect(_on_gameEndSfx_finished)
 	add_child(gameEndSfx)
@@ -63,23 +59,16 @@ func start_singleplayer_game():
 	grid.difficulty = difficulty
 	add_child(grid)
 	grid.init()
-	saveState()
 	playerPiece = Piece.instantiate()
 	add_child(playerPiece)
 	if difficulty == 1:
 		playerPiece.easy()
 	playerPiece.setRandomShape(grid.getRemainingColors())
-	thongs = DrThongs.instantiate()
-	thongs.position = Vector2(1066, 415)
-	add_child(thongs)
-	pieceXIndex = grid.gridWidth / 2 - 2
 	pieceYIndex = grid.gridWidth / 2 - 2
-	drawPlayerPiecePosition()
 	queue = [Piece.instantiate(), Piece.instantiate()]
 	for piece in range(queue.size()):
 		add_child(queue[piece])
 		queue[piece].setRandomShape(grid.getRemainingColors())
-	drawQueuePosition()
 	horizontalDas = Timer.new()
 	verticalDas = Timer.new()
 	horizontalDas.autostart = false
@@ -93,16 +82,45 @@ func start_singleplayer_game():
 	add_child(horizontalDas)
 	add_child(verticalDas)
 	gameTimer = Timer.new()
-	gameTimer.autostart = true
+	gameTimer.autostart = false
 	gameTimer.one_shot = true
 	gameTimer.wait_time = 120
 	gameTimer.timeout.connect(_on_gameTimer_timeout)
 	add_child(gameTimer)
 
+@rpc("authority", "call_local", "reliable")
+func setUpMusic(track: int):
+	music.stream = MusicArray[track]
+	if !musicMuted:
+		playMusic()
+
+func start_singleplayer_game():
+	setUpMusic(randi_range(0, MusicArray.size() - 1))
+	thongs = DrThongs.instantiate()
+	thongs.position = Vector2(1066, 415)
+	add_child(thongs)
+	pieceXIndex = grid.gridWidth / 2 - 2
+	drawPlayerPiecePosition()
+	drawQueuePosition()
+	gameTimer.start()
+
+func loadMultiplayer():
+	multiFlag = true
+	if multiplayer.is_server():
+		pieceXIndex = grid.gridWidth / 2 - 2 - 3
+	else:
+		pieceXIndex = grid.gridWidth / 2 - 2 + 3
+	drawPlayerPiecePosition()
+	drawQueuePosition()
+	#TODO load the two doctors
+	emit_signal("loaded_multiplayer")
+
 # Called only on the server.
 func start_multiplayer_game():
 	# All peers are ready to receive RPCs in this scene.
-	pass
+	setUpMusic.rpc(randi_range(0, MusicArray.size() - 1))
+	#todo sync state
+	#todo start both timers
 
 func setDifficulty(difficulty: int):
 	self.difficulty = difficulty
@@ -231,15 +249,23 @@ func spin(direction: int):
 	playerPiece.spin(direction)
 
 func drawPlayerPiecePosition():
-	if difficulty == 1:
-		playerPiece.position = Vector2i(9 + pieceXIndex * grid.cellSize, 11 + pieceYIndex * grid.cellSize)
-	else:
+	if multiFlag: #todo
 		playerPiece.position = Vector2i(50 + pieceXIndex * grid.cellSize, 35 + pieceYIndex * grid.cellSize)
+	else:
+		if difficulty == 1:
+			playerPiece.position = Vector2i(9 + pieceXIndex * grid.cellSize, 11 + pieceYIndex * grid.cellSize)
+		else:
+			playerPiece.position = Vector2i(50 + pieceXIndex * grid.cellSize, 35 + pieceYIndex * grid.cellSize)
 
 func drawQueuePosition():
-	for i in queue.size():
-		queue[i].position = Vector2i(26 + (13) * 50,
-		(50 * 13 * 1) / 2 - ((4 * i) + 1) * 50)
+	if multiFlag:
+		for i in queue.size():
+			queue[i].position = Vector2i(26 + (13) * 50,
+			(50 * 13 * 1) / 2 - ((4 * i) + 1) * 50)
+	else:
+		for i in queue.size():
+			queue[i].position = Vector2i(26 + (13) * 50,
+			(50 * 13 * 1) / 2 - ((4 * i) + 1) * 50)
 
 func _input(event):
 	if !event is InputEventMouseButton:

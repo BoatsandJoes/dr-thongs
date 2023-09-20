@@ -35,17 +35,18 @@ func player_loaded():
 func _on_lobby_start(game):
 	remove_child(lobby)
 	gameManager = game
-	gameManager.ready.connect(_on_gameManager_ready)
+	gameManager.loaded_multiplayer.connect(_on_gameManager_loaded_multiplayer)
 	add_child(gameManager)
-	if !muted:
-		gameManager.playMusic()
+	if muted:
+		gameManager.muteMusic()
 	if voiceMuted:
 		gameManager.muteCountdown()
 	if sfxMuted:
 		gameManager.muteSfx()
+	gameManager.loadMultiplayer()
 	lobby.queue_free()
 
-func _on_gameManager_ready():
+func _on_gameManager_loaded_multiplayer():
 	player_loaded.rpc_id(1)
 
 func _on_mainMenu_multi():
