@@ -177,7 +177,7 @@ func syncStateClient(json: String):
 	ghostPieceXIndex = grid.gridWidth / 2 - 2 - 3
 	updateGhostPosition()
 	timeElapsed = 0.0
-	saveState()
+	previousStates.append(SaveState.of(grid.board, -1.0, PackedInt32Array(), Globals.PieceColor.Empty, 1))
 	syncStateServer.rpc(JSON.stringify({"pieceSeq": pieceSequence}))
 
 @rpc("any_peer","call_remote","reliable")
@@ -189,7 +189,7 @@ func syncStateServer(pieceSeq: String):
 	ghostPieceXIndex = grid.gridWidth / 2 - 2 + 3
 	updateGhostPosition()
 	timeElapsed = 0.0
-	saveState()
+	previousStates.append(SaveState.of(grid.board, -1.0, PackedInt32Array(), Globals.PieceColor.Empty, 1))
 	#test ping
 	pingTestTimeElapsed = timeElapsed
 	testPing.rpc()
@@ -298,10 +298,6 @@ func _on_grid_clearsComplete():
 		thongs.unflex()
 		gameTimer.paused = false
 		advanceQueue()
-
-func saveState():
-	previousStates.append(SaveState.of(grid.board, timeElapsed, [])) #todo queue
-	#todo check if this state is not the latest and if not, perform a rollback
 
 func _on_horizontalDas_timeout():
 	shiftPiece(horizontalDirection, 0)
@@ -471,14 +467,46 @@ func _input(event):
 	elif event.is_action_pressed("ccw"):
 		spin(-1)
 	elif event.is_action_pressed("place") && playerPiece.visible:
-		if grid.place(playerPiece, pieceXIndex, pieceYIndex):
+		if multiFlag:
+			placeAndResimulateLocal()
+		elif grid.place(playerPiece, pieceXIndex, pieceYIndex):
 			advanceQueue()
-			saveState()
-			#todo if a player clears two blocks then how do you track ownership of the second?
-			# The game doesn't know the difference.
-			# and if the other player adds to it and clears it, who owns it now?
-			#timeout place is another special case because I think it plays a different sound,
-			#and failed placement throws the piece away
+
+@rpc("any_peer", "call_remote", "reliable")
+func placeAndResimulate(seqIndex: int, x: int, y: int, rotate: int, timeElapsed: float):
+	#todo the big boy
+	pass
+
+func placeAndResimulateLocal() -> bool:
+	var i: int = previousStates.size() - 1
+	while previousStates[i].timeElapsed > timeElapsed:
+		i -= 1
+	var state = previousStates[i]
+	if state.timeElapsed == timeElapsed && multiplayer.is_server():
+		i -= 1
+		state = previousStates[i]
+	var shape = playerPiece.getCurrentShape()
+	var pieceCells = PackedInt32Array()
+	for j in shape.size():
+		if shape[j] == 2:
+			pieceCells.append(grid.getFlatIndex(Vector2i(pieceXIndex + (j % 3), pieceYIndex + (j / 3))))
+	var newBoard = grid.placePieceIntoBoard(pieceCells, playerPiece.color, state.board)
+	if newBoard == null:
+		grid.bonkSfxPlay()
+		return false
+	else:
+		placeAndResimulate.rpc(pieceSeqIndex, pieceXIndex, pieceYIndex, playerPiece.state, timeElapsed)
+		grid.placeSfx()
+		var id = 2
+		if multiplayer.is_server():
+			id = 1
+		#todo check for clears, and start clear delay if we aren't already in clear delay.
+		previousStates.insert(i,SaveState.of(newBoard, timeElapsed, pieceCells, playerPiece.color, id))
+		#todo resimulate, basically just repeating what we just did for every save state until the end.
+		#the way we handle clear delay there is a tiny bit different.
+		#if there is a bonk, invalidate all later placements from that player id.
+		advanceQueue()
+		return true
 
 func advanceQueue():
 	if !grid.clearing:

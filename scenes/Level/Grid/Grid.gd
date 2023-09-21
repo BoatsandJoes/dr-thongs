@@ -213,6 +213,19 @@ func updateRemainingColors():
 			colors.append(color)
 	remainingColors = colors
 
+func canPlace(playerPiece: Piece, pieceXIndex: int, pieceYIndex: int) -> bool:
+	var piece: Array = playerPiece.getCurrentShape()
+	for i in piece.size():
+		if piece[i] == 2:
+			var cellIndex: Vector2i = Vector2i(pieceXIndex + i % 5, pieceYIndex + i / 5)
+			var flatIndex: int = getFlatIndex(cellIndex)
+			if board[flatIndex] == playerPiece.color:
+				if !sfxMuted:
+					bonkSfx.stream = BonkSfxArray[randi_range(0, BonkSfxArray.size() - 1)]
+					bonkSfx.play()
+				return false
+	return true
+
 func place(playerPiece: Piece, pieceXIndex: int, pieceYIndex: int) -> bool:
 	var piece: Array = playerPiece.getCurrentShape()
 	var cells: Array[int] = []
@@ -227,9 +240,7 @@ func place(playerPiece: Piece, pieceXIndex: int, pieceYIndex: int) -> bool:
 			var cellIndex: Vector2i = Vector2i(pieceXIndex + i % 5, pieceYIndex + i / 5)
 			var flatIndex: int = getFlatIndex(cellIndex)
 			if board[flatIndex] == playerPiece.color:
-				if !sfxMuted:
-					bonkSfx.stream = BonkSfxArray[randi_range(0, BonkSfxArray.size() - 1)]
-					bonkSfx.play()
+				bonkSfxPlay()
 				return false
 			cells.append(flatIndex)
 		elif piece[i] == 1:
@@ -248,6 +259,15 @@ func place(playerPiece: Piece, pieceXIndex: int, pieceYIndex: int) -> bool:
 	if !sfxMuted:
 		placePieceSfx.play()
 	return true
+
+func placeSfx():
+	if !sfxMuted:
+		placePieceSfx.play()
+
+func bonkSfxPlay():
+	if !sfxMuted:
+		bonkSfx.stream = BonkSfxArray[randi_range(0, BonkSfxArray.size() - 1)]
+		bonkSfx.play()
 
 func checkClears() -> bool:
 	# checkClears
