@@ -134,6 +134,7 @@ func loadMultiplayer():
 	pingTimer.timeout.connect(_on_pingTimer_timeout)
 	add_child(pingTimer)
 	multiFlag = true
+	grid.multiFlag = true
 	if multiplayer.is_server():
 		pieceXIndex = grid.gridWidth / 2 - 2 - 3
 	else:
@@ -142,6 +143,9 @@ func loadMultiplayer():
 	playerPiece.visible = false
 	drawQueuePosition()
 	#TODO load the two doctors
+	thongs = DrThongs.instantiate()
+	thongs.position = Vector2(1066, 415)
+	add_child(thongs)
 	emit_signal("loaded_multiplayer")
 
 # Called only on the server.
@@ -177,7 +181,8 @@ func syncStateClient(json: String):
 	ghostPieceXIndex = grid.gridWidth / 2 - 2 - 3
 	updateGhostPosition()
 	timeElapsed = 0.0
-	previousStates.append(SaveState.of(grid.board, -1.0, PackedInt32Array(), Globals.PieceColor.Empty, 1))
+	previousStates.append(SaveState.of(grid.board, -1.0, PackedInt32Array(),
+	Globals.PieceColor.Empty, 1, []))
 	syncStateServer.rpc(JSON.stringify({"pieceSeq": pieceSequence}))
 
 @rpc("any_peer","call_remote","reliable")
@@ -189,7 +194,8 @@ func syncStateServer(pieceSeq: String):
 	ghostPieceXIndex = grid.gridWidth / 2 - 2 + 3
 	updateGhostPosition()
 	timeElapsed = 0.0
-	previousStates.append(SaveState.of(grid.board, -1.0, PackedInt32Array(), Globals.PieceColor.Empty, 1))
+	previousStates.append(SaveState.of(grid.board, -1.0, PackedInt32Array(),
+	Globals.PieceColor.Empty, 1, []))
 	#test ping
 	pingTestTimeElapsed = timeElapsed
 	testPing.rpc()
@@ -266,28 +272,32 @@ func _on_gameTimer_timeout():
 		_on_gameEndSfx_finished()
 
 func _on_grid_victory():
-	won = true
-	thongs.flex()
-	music.stop()
-	gameTimer.paused = true
-	if difficulty == 1:
-		grid.setCells(Globals.PieceColor.Red, range(0, grid.board.size(), 2), {})
-		grid.setCells(Globals.PieceColor.Green, range(1, grid.board.size(), 2), {})
-	elif difficulty == 2:
-		grid.setCells(Globals.PieceColor.Red, range(0, grid.board.size(), 3), {})
-		grid.setCells(Globals.PieceColor.Green, range(1, grid.board.size(), 3), {})
-		grid.setCells(Globals.PieceColor.Blue, range(2, grid.board.size(), 3), {})
-	elif difficulty == 0:
-		grid.setCells(Globals.PieceColor.Red, range(0, grid.board.size(), 4), {})
-		grid.setCells(Globals.PieceColor.Green, range(1, grid.board.size(), 4), {})
-		grid.setCells(Globals.PieceColor.Blue, range(2, grid.board.size(), 4), {})
-		grid.setCells(Globals.PieceColor.Yellow, range(3, grid.board.size(), 4), {})
-	hud.updateResult("You Win!")
-	if !sfxMuted:
-		gameEndSfx.stream = VictorySfx
-		gameEndSfx.play()
-	elif !voiceMuted:
-		_on_gameEndSfx_finished()
+	if multiFlag:
+		#todo multiplayer victory check
+		pass
+	else:
+		won = true
+		thongs.flex()
+		music.stop()
+		gameTimer.paused = true
+		if difficulty == 1:
+			grid.setCells(Globals.PieceColor.Red, range(0, grid.board.size(), 2), {})
+			grid.setCells(Globals.PieceColor.Green, range(1, grid.board.size(), 2), {})
+		elif difficulty == 2:
+			grid.setCells(Globals.PieceColor.Red, range(0, grid.board.size(), 3), {})
+			grid.setCells(Globals.PieceColor.Green, range(1, grid.board.size(), 3), {})
+			grid.setCells(Globals.PieceColor.Blue, range(2, grid.board.size(), 3), {})
+		elif difficulty == 0:
+			grid.setCells(Globals.PieceColor.Red, range(0, grid.board.size(), 4), {})
+			grid.setCells(Globals.PieceColor.Green, range(1, grid.board.size(), 4), {})
+			grid.setCells(Globals.PieceColor.Blue, range(2, grid.board.size(), 4), {})
+			grid.setCells(Globals.PieceColor.Yellow, range(3, grid.board.size(), 4), {})
+		hud.updateResult("You Win!")
+		if !sfxMuted:
+			gameEndSfx.stream = VictorySfx
+			gameEndSfx.play()
+		elif !voiceMuted:
+			_on_gameEndSfx_finished()
 
 func _on_grid_clearStart():
 	gameTimer.paused = true
@@ -489,7 +499,7 @@ func placeAndResimulateLocal() -> bool:
 	var pieceCells = PackedInt32Array()
 	for j in shape.size():
 		if shape[j] == 2:
-			pieceCells.append(grid.getFlatIndex(Vector2i(pieceXIndex + (j % 3), pieceYIndex + (j / 3))))
+			pieceCells.append(grid.getFlatIndex(Vector2i(pieceXIndex + (j % 5), pieceYIndex + (j / 5))))
 	var newBoard = grid.placePieceIntoBoard(pieceCells, playerPiece.color, state.board)
 	if newBoard == null:
 		grid.bonkSfxPlay()
@@ -500,12 +510,29 @@ func placeAndResimulateLocal() -> bool:
 		var id = 2
 		if multiplayer.is_server():
 			id = 1
-		#todo check for clears, and start clear delay if we aren't already in clear delay.
-		previousStates.insert(i,SaveState.of(newBoard, timeElapsed, pieceCells, playerPiece.color, id))
+		#check for clears
+		var clears: PackedInt32Array = PackedInt32Array()
+		var clearedBoard = grid.removeAllClears(newBoard)
+		if clearedBoard != null:
+			newBoard = clearedBoard["clearedBoard"]
+			clears = clearedBoard["clears"]
+			grid.playClearSfx()
+			#Start clear delay if we aren't already in clear delay. End of clear delay will advance queue
+			if grid.clearDelay.is_stopped():
+				grid.clearDelay.start(4.0/3.0)
+				playerPiece.visible = false
+				thongs.flex()
+		previousStates.insert(i + 1,SaveState.of(newBoard, timeElapsed, pieceCells, playerPiece.color, id, clears))
 		#todo resimulate, basically just repeating what we just did for every save state until the end.
-		#the way we handle clear delay there is a tiny bit different.
-		#if there is a bonk, invalidate all later placements from that player id.
-		advanceQueue()
+		for r in range(i + 2, previousStates.size()):
+			var resimulateState = previousStates[r]
+			#todo the way we handle clear delay there is a tiny bit different.
+			#todo if there is a bonk, invalidate all later placements from that player id.
+		#todo visual update of clears
+		grid.updateBoard(newBoard)
+		grid.checkVictory()
+		if playerPiece.visible:
+			advanceQueue()
 		return true
 
 func advanceQueue():
