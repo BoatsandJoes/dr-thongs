@@ -70,7 +70,7 @@ func _ready():
 	add_child(grid)
 	grid.init()
 	ghostPiece = Piece.instantiate()
-	ghostPiece.set_modulate(Color(0,0,0,0.5))
+	ghostPiece.set_modulate(Color(1,1,1,0.5))
 	add_child(ghostPiece)
 	playerPiece = Piece.instantiate()
 	add_child(playerPiece)
