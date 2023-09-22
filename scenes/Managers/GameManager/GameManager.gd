@@ -323,16 +323,19 @@ func _on_grid_clearsComplete():
 	if !won:
 		thongs.unflex()
 		gameTimer.paused = false
-		advanceQueue()
+		if !playerPiece.visible:
+			advanceQueue()
+		if !ghostPiece.visible:
+			advanceGhostQueue()
 
 func _on_horizontalDas_timeout():
 	shiftPiece(horizontalDirection, 0)
-	horizontalDas.wait_time = 1.0/60.0
+	horizontalDas.wait_time = 1.0/30.0
 	horizontalDas.start()
 
 func _on_verticalDas_timeout():
 	shiftPiece(0, verticalDirection)
-	verticalDas.wait_time = 1.0/60.0
+	verticalDas.wait_time = 1.0/30.0
 	verticalDas.start()
 
 func shiftPiece(horizontal: int, vertical: int):
@@ -554,10 +557,18 @@ func placeAndResimulate(seqIndex: int, x: int, y: int, rotate: int, timeElapsed:
 			clears = clearedBoard["clears"]
 			grid.playClearSfx()
 			#Start their clear delay if we aren't already in clear delay. End of clear delay will advance queue
-			#thongs.flex()
+			if grid.clearDelay.is_stopped():
+				grid.clearDelay.start(4.0/3.0 - self.timeElapsed - timeElapsed)
+				ghostPiece.visible = false
+			elif (thongs.isFlex() && 4.0/3.0 - grid.clearDelay.time_left <
+			self.timeElapsed - timeElapsed):
+				_on_grid_clearsComplete() #xxx
 		previousStates.insert(i + 1,SaveState.of(newBoard, timeElapsed, pieceCells, color, id,
 		clears, seqIndex))
 		#resimulate, basically just repeating what we just did for every save state until the end.
+		var allClears: Array = []
+		if clears.size() > 0:
+			allClears.append_array(clears)
 		var statesToRemove: Array[int] = []
 		for r in range(i + 2, previousStates.size()):
 			var prevBoard = previousStates[r - 1]
@@ -584,6 +595,7 @@ func placeAndResimulate(seqIndex: int, x: int, y: int, rotate: int, timeElapsed:
 					if boardAfterClears != null:
 						nextBoard = boardAfterClears["clearedBoard"]
 						clearedCells = clearedBoard["clears"]
+						allClears.append_array(clearedCells)
 						#todo the way we handle clear delay here should be a tiny bit different.
 			#			if grid.clearDelay.is_stopped():
 			#				grid.clearDelay.start(4.0/3.0)
@@ -592,7 +604,8 @@ func placeAndResimulate(seqIndex: int, x: int, y: int, rotate: int, timeElapsed:
 					previousStates[r] = SaveState.of(nextBoard, resimulateState.timeElapsed,
 					resimulateState.cellIndexes, resimulateState.cellsColor, resimulateState.playerId,
 					clearedCells, resimulateState.pieceSeqIndex)
-		#todo visual update of clears
+		#visual update of clears
+		grid.updateClearsMulti(allClears)
 		for v in range(statesToRemove.size() - 1, -1, -1):
 			previousStates.remove_at(statesToRemove[v])
 		#todo only update cells that have changed, instead of all.
@@ -695,7 +708,7 @@ func placeAndResimulateLocal() -> bool:
 					previousStates[r] = SaveState.of(nextBoard, resimulateState.timeElapsed,
 					resimulateState.cellIndexes, resimulateState.cellsColor, resimulateState.playerId,
 					clearedCells, resimulateState.pieceSeqIndex)
-		#todo visual update of clears
+		#visual update of clears
 		grid.updateClearsMulti(allClears)
 		for v in range(statesToRemove.size() - 1, -1, -1):
 			previousStates.remove_at(statesToRemove[v])
@@ -726,6 +739,17 @@ func updateQueueToIndex(index):
 	for i in queue.size():
 		queue[i].setRandomShape(mode, multiplayer.is_server(), grid.getRemainingColors(),
 		pieceSequence[(pieceSeqIndex + i + 1) % pieceSequence.size()])
+
+func advanceGhostQueue():
+	ghostPiece.visible = true
+	ghostPiece.setRandomShape(mode, multiplayer.is_server(), grid.getRemainingColors(),
+	ghostSeq[ghostSeqIndex % ghostSeq.size()])
+	ghostPieceYIndex = grid.gridHeight / 2 - 2
+	if multiplayer.is_server():
+		ghostPieceXIndex = grid.gridWidth / 2 - 2 + 3
+	else:
+		ghostPieceXIndex = grid.gridWidth / 2 - 2 - 3
+	updateGhostPosition()
 
 func advanceQueue():
 	#todo there's a "feature" where when a color is wiped, it is also wiped from the queue.

@@ -147,6 +147,8 @@ func _on_Join_pressed():
 				port = result2.get_string().substr(1)
 				hosting = false
 				openLobby()
+		#else:
+		#	regex.compile("\[?[a-fA-F0-9][a-fA-F0-9]?[a-fA-F0-9]?[a-fA-F0-9]?:[a-fA-F0-9][a-fA-F0-9]?[a-fA-F0-9]?[a-fA-F0-9]?:[a-fA-F0-9][a-fA-F0-9]?[a-fA-F0-9]?[a-fA-F0-9]?:[a-fA-F0-9][a-fA-F0-9]?[a-fA-F0-9]?[a-fA-F0-9]?:[a-fA-F0-9][a-fA-F0-9]?[a-fA-F0-9]?[a-fA-F0-9]?\]?:\d\d\d?\d?\d?")
 
 func openLobby():
 	%HostJoin.visible = false
