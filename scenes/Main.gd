@@ -18,6 +18,7 @@ var voiceMuted = false
 var sfxMuted = false
 var players_loaded = 0
 var difficulty = 2
+var playersLoadedIntoLobby: int = 0
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
@@ -36,6 +37,8 @@ func _on_lobby_start(game):
 	remove_child(lobby)
 	gameManager = game
 	gameManager.loaded_multiplayer.connect(_on_gameManager_loaded_multiplayer)
+	gameManager.backToMenu.connect(onlineGameBackToLobby)
+	gameManager.disconnected.connect(_on_mainMenu_multi) #todo disconnected never emits.
 	add_child(gameManager, true)
 	if muted:
 		gameManager.muteMusic()
@@ -44,15 +47,40 @@ func _on_lobby_start(game):
 	if sfxMuted:
 		gameManager.muteSfx()
 	gameManager.loadMultiplayer()
-	lobby.queue_free()
+
+func onlineGameBackToLobby():
+	#lobby.process_mode = Node.PROCESS_MODE_DISABLED
+	add_child(lobby, true)
+	remove_child(gameManager)
+	if gameManager != null:
+		gameManager.queue_free()
+	loadBackIntoLobby.rpc_id(1)
+
+@rpc("authority", "call_local", "reliable")
+func processLobby(): #lobby.process_mode = Node.PROCESS_MODE_INHERIT
+	if multiplayer.is_server():
+		lobby.startEnabled = true
+
+@rpc("any_peer", "call_local", "reliable")
+func loadBackIntoLobby():
+	if multiplayer.is_server():
+		playersLoadedIntoLobby += 1
+		if playersLoadedIntoLobby == 2:
+			playersLoadedIntoLobby = 0
+			processLobby.rpc()
 
 func _on_gameManager_loaded_multiplayer():
 	player_loaded.rpc_id(1)
 
 func _on_mainMenu_multi():
+	remove_child(gameManager)
 	remove_child(mainMenu)
 	if mainMenu != null:
 		mainMenu.queue_free()
+	if gameManager != null:
+		gameManager.queue_free()
+	if lobby != null:
+		lobby.queue_free()
 	lobby = Lobby.instantiate()
 	lobby.back.connect(navToMain)
 	lobby.start.connect(_on_lobby_start)

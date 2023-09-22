@@ -21,6 +21,7 @@ var players = {}
 # It will be passed to every other peer.
 var player_info = {"name": "Host"}
 var players_loaded = 0
+var startEnabled: bool = true
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
@@ -103,7 +104,9 @@ func load_game(mode: int):
 	emit_signal("start", gameManager)
 
 func _on_Start_pressed():
-	load_game.rpc(0) #If there's a game mode, can pass it here
+	if startEnabled:
+		startEnabled = false
+		load_game.rpc(0) #If there's a game mode, can pass it here
 
 func _on_Host_pressed():
 	if %Port.text != null:
