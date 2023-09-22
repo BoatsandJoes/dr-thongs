@@ -572,14 +572,14 @@ func placeAndResimulate(seqIndex: int, x: int, y: int, rotate: int, timeElapsed:
 			allClears.append_array(clears)
 		var statesToRemove: Array[int] = []
 		for r in range(i + 2, previousStates.size()):
-			var prevBoard = previousStates[r - 1]
+			var prevBoard = previousStates[r - 1]["board"]
 			var resimulateState = previousStates[r]
 			if ((resimulateState.playerId == 1 && serverBonkIndex > -2)
 			|| (resimulateState.playerId != 1 && clientBonkIndex > -2)):
 				resimulateState.board = prevBoard
 				statesToRemove.append(r)
 			else:
-				var nextBoard = grid.placePieceIntoBoard(resimulateState.cellIndexes.size(),
+				var nextBoard = grid.placePieceIntoBoard(resimulateState.cellIndexes,
 				resimulateState.cellsColor, prevBoard)
 				print("resimulate remote:")
 				print("prev board: ", prevBoard)
@@ -684,14 +684,14 @@ func placeAndResimulateLocal() -> bool:
 			allClears.append_array(clears)
 		var statesToRemove: Array[int] = []
 		for r in range(i + 2, previousStates.size()):
-			var prevBoard = previousStates[r - 1]
+			var prevBoard = previousStates[r - 1]["board"]
 			var resimulateState = previousStates[r]
 			if ((resimulateState.playerId == 1 && serverBonkIndex > -2)
 			|| (resimulateState.playerId != 1 && clientBonkIndex > -2)):
 				resimulateState.board = prevBoard
 				statesToRemove.append(r)
 			else:
-				var nextBoard = grid.placePieceIntoBoard(resimulateState.cellIndexes.size(),
+				var nextBoard = grid.placePieceIntoBoard(resimulateState.cellIndexes,
 				resimulateState.cellsColor, prevBoard)
 				print("resimulate local:")
 				print("prev board: ", prevBoard)
