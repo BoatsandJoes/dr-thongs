@@ -1,17 +1,22 @@
 extends CanvasLayer
 class_name MainMenu
 signal play
+signal multi
 signal options
 signal exit
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	%Play.pressed.connect(_on_Play_pressed)
+	%Multiplayer.pressed.connect(_on_Multiplayer_pressed)
 	%Options.pressed.connect(_on_Options_pressed)
 	%Exit.pressed.connect(_on_Exit_pressed)
 
 func _on_Play_pressed():
 	emit_signal("play")
+
+func _on_Multiplayer_pressed():
+	emit_signal("multi")
 
 func _on_Options_pressed():
 	emit_signal("options")

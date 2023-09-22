@@ -5,7 +5,14 @@ const Grid = preload("res://scenes/Level/Grid/Grid.tscn")
 var grid: Grid
 const Piece = preload("res://scenes/Actors/Piece/Piece.tscn")
 var playerPiece: Piece
+var ghostPiece: Piece
 var queue: Array[Piece]
+var pieceSequence: Array
+var pieceSeqIndex: int = 0
+var ghostSeq: Array
+var ghostSeqIndex: int = 0
+var ghostPieceXIndex: int
+var ghostPieceYIndex: int
 var pieceXIndex: int
 var pieceYIndex: int
 var horizontalDas: Timer
@@ -32,16 +39,24 @@ var gameEndSfx: AudioStreamPlayer
 var voicePlayed: bool = false
 var enableQuickExit: bool = false
 signal backToMenu
+signal loaded_multiplayer
+signal disconnected
 var voiceMuted: bool = false
 var sfxMuted: bool = false
+var musicMuted: bool = false
 var won: bool = false
 var difficulty: int = 0
+var multiFlag = false
+var pingTimer: Timer
+var pingTestTimeElapsed: float
+var pingTestCount: int = 0
+var mutex: Mutex
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
+	mutex = Mutex.new()
 	music = AudioStreamPlayer.new()
 	music.set_bus("Reduce")
-	music.stream = MusicArray[randi_range(0, MusicArray.size() - 1)]
 	music.finished.connect(_on_music_finished)
 	add_child(music)
 	gameEndSfx = AudioStreamPlayer.new()
@@ -57,23 +72,22 @@ func _ready():
 	grid.difficulty = difficulty
 	add_child(grid)
 	grid.init()
-	saveState()
+	ghostPiece = Piece.instantiate()
+	ghostPiece.set_modulate(Color(1,1,1,0.5))
+	add_child(ghostPiece)
 	playerPiece = Piece.instantiate()
 	add_child(playerPiece)
 	if difficulty == 1:
 		playerPiece.easy()
-	playerPiece.setRandomShape(grid.getRemainingColors())
-	thongs = DrThongs.instantiate()
-	thongs.position = Vector2(1066, 415)
-	add_child(thongs)
-	pieceXIndex = grid.gridWidth / 2 - 2
+	generatePieceSequence()
+	playerPiece.setRandomShape(grid.getRemainingColors(),
+	pieceSequence[pieceSeqIndex % pieceSequence.size()])
 	pieceYIndex = grid.gridWidth / 2 - 2
-	drawPlayerPiecePosition()
 	queue = [Piece.instantiate(), Piece.instantiate()]
 	for piece in range(queue.size()):
 		add_child(queue[piece])
-		queue[piece].setRandomShape(grid.getRemainingColors())
-	drawQueuePosition()
+		queue[piece].setRandomShape(grid.getRemainingColors(),
+		pieceSequence[(pieceSeqIndex + piece + 1) % pieceSequence.size()])
 	horizontalDas = Timer.new()
 	verticalDas = Timer.new()
 	horizontalDas.autostart = false
@@ -87,17 +101,145 @@ func _ready():
 	add_child(horizontalDas)
 	add_child(verticalDas)
 	gameTimer = Timer.new()
-	gameTimer.autostart = true
+	gameTimer.autostart = false
 	gameTimer.one_shot = true
 	gameTimer.wait_time = 120
 	gameTimer.timeout.connect(_on_gameTimer_timeout)
 	add_child(gameTimer)
+
+func generatePieceSequence():
+	pieceSequence = []
+	for i in 180:
+		pieceSequence.append(PieceSequence.getRandom())
+
+@rpc("authority", "call_local", "reliable")
+func setUpMusic(track: int):
+	music.stream = MusicArray[track]
+	if !musicMuted:
+		playMusic()
+
+func start_singleplayer_game():
+	remove_child(ghostPiece)
+	ghostPiece.queue_free
+	setUpMusic(randi_range(0, MusicArray.size() - 1))
+	thongs = DrThongs.instantiate()
+	thongs.position = Vector2(1066, 415)
+	add_child(thongs)
+	pieceXIndex = grid.gridWidth / 2 - 2
+	drawPlayerPiecePosition()
+	drawQueuePosition()
+	gameTimer.start()
+
+func _on_multiplayer_peer_disconnected():
+	emit_signal("disconnected")
+
+func loadMultiplayer():
+	pingTimer = Timer.new()
+	pingTimer.autostart = false
+	pingTimer.one_shot = true
+	pingTimer.timeout.connect(_on_pingTimer_timeout)
+	add_child(pingTimer)
+	multiFlag = true
+	grid.multiFlag = true
+	if multiplayer.is_server():
+		pieceXIndex = grid.gridWidth / 2 - 2 - 3
+	else:
+		pieceXIndex = grid.gridWidth / 2 - 2 + 3
+	drawPlayerPiecePosition()
+	playerPiece.visible = false
+	drawQueuePosition()
+	#TODO load the two doctors
+	thongs = DrThongs.instantiate()
+	thongs.position = Vector2(1066, 415)
+	add_child(thongs)
+	emit_signal("loaded_multiplayer")
+
+# Called only on the server.
+func start_multiplayer_game():
+	# All peers are ready to receive RPCs in this scene.
+	setUpMusic.rpc(randi_range(0, MusicArray.size() - 1))
+	syncStateClient.rpc(JSON.stringify({"pieceSeq": pieceSequence, "board": grid.board}))
+
+func pieceSeqDictFixTypes(seq: Array)->Array:
+	for i in seq:
+		i.shape = int(i.shape)
+		i.state = int(i.state)
+		var order = PackedInt32Array()
+		for j in i.color_order:
+			order.append(int(j))
+		i.color_order = order
+	return seq
+
+func floatArrayToPackedInt32(array: Array)->PackedInt32Array:
+	var result = PackedInt32Array()
+	for i in array:
+		result.append(int(i))
+	return result
+
+@rpc("authority","call_remote","reliable")
+func syncStateClient(json: String):
+	var result = JSON.parse_string(json)
+	grid.updateBoard(floatArrayToPackedInt32(result["board"]))
+	ghostSeq = pieceSeqDictFixTypes(result["pieceSeq"])
+	ghostPiece.setRandomShape(grid.getRemainingColors(),
+	ghostSeq[ghostSeqIndex % ghostSeq.size()])
+	ghostPieceYIndex = grid.gridWidth / 2 - 2
+	ghostPieceXIndex = grid.gridWidth / 2 - 2 - 3
+	updateGhostPosition()
+	timeElapsed = 0.0
+	previousStates.append(SaveState.of(grid.board, -1.0, PackedInt32Array(),
+	Globals.PieceColor.Empty, 1, [], -1))
+	syncStateServer.rpc(JSON.stringify({"pieceSeq": pieceSequence}))
+
+@rpc("any_peer","call_remote","reliable")
+func syncStateServer(pieceSeq: String):
+	ghostSeq = pieceSeqDictFixTypes(JSON.parse_string(pieceSeq)["pieceSeq"])
+	ghostPiece.setRandomShape(grid.getRemainingColors(),
+	ghostSeq[ghostSeqIndex % ghostSeq.size()])
+	ghostPieceYIndex = grid.gridWidth / 2 - 2
+	ghostPieceXIndex = grid.gridWidth / 2 - 2 + 3
+	updateGhostPosition()
+	timeElapsed = 0.0
+	previousStates.append(SaveState.of(grid.board, -1.0, PackedInt32Array(),
+	Globals.PieceColor.Empty, 1, [], -1))
+	#test ping
+	pingTestTimeElapsed = timeElapsed
+	testPing.rpc()
+
+@rpc("authority", "call_remote", "reliable")
+func testPing():
+	testPong.rpc_id(1)
+
+@rpc("any_peer", "call_remote", "reliable")
+func testPong():
+	pingTestCount += 1
+	if pingTestCount == 5:
+		pingTestTimeElapsed = timeElapsed - pingTestTimeElapsed
+		startTimer.rpc(pingTestTimeElapsed / 10.0) #/5 because 5 tests, and /2 because round trip
+	else:
+		testPing.rpc()
+
+@rpc("authority", "call_local", "reliable")
+func startTimer(halfPing: float):
+	if multiplayer.is_server():
+		pingTimer.wait_time = halfPing
+		pingTimer.start()
+	else:
+		_on_pingTimer_timeout()
+
+func _on_pingTimer_timeout():
+	timeElapsed = 0
+	gameTimer.start()
+	playerPiece.visible = true
 
 func setDifficulty(difficulty: int):
 	self.difficulty = difficulty
 
 func playMusic():
 	music.play()
+
+func muteMusic():
+	musicMuted = true
 
 func muteCountdown():
 	hud.muteCountdown()
@@ -136,18 +278,32 @@ func _on_gameTimer_timeout():
 		_on_gameEndSfx_finished()
 
 func _on_grid_victory():
-	won = true
-	thongs.flex()
-	music.stop()
-	gameTimer.paused = true
-	grid.setCells(Globals.PieceColor.Red, range(0, grid.board.size(), 2), {})
-	grid.setCells(Globals.PieceColor.Green, range(1, grid.board.size(), 2), {})
-	hud.updateResult("You Win!")
-	if !sfxMuted:
-		gameEndSfx.stream = VictorySfx
-		gameEndSfx.play()
-	elif !voiceMuted:
-		_on_gameEndSfx_finished()
+	if multiFlag:
+		#todo multiplayer victory check
+		pass
+	else:
+		won = true
+		thongs.flex()
+		music.stop()
+		gameTimer.paused = true
+		if difficulty == 1:
+			grid.setCells(Globals.PieceColor.Red, range(0, grid.board.size(), 2), {})
+			grid.setCells(Globals.PieceColor.Green, range(1, grid.board.size(), 2), {})
+		elif difficulty == 2:
+			grid.setCells(Globals.PieceColor.Red, range(0, grid.board.size(), 3), {})
+			grid.setCells(Globals.PieceColor.Green, range(1, grid.board.size(), 3), {})
+			grid.setCells(Globals.PieceColor.Blue, range(2, grid.board.size(), 3), {})
+		elif difficulty == 0:
+			grid.setCells(Globals.PieceColor.Red, range(0, grid.board.size(), 4), {})
+			grid.setCells(Globals.PieceColor.Green, range(1, grid.board.size(), 4), {})
+			grid.setCells(Globals.PieceColor.Blue, range(2, grid.board.size(), 4), {})
+			grid.setCells(Globals.PieceColor.Yellow, range(3, grid.board.size(), 4), {})
+		hud.updateResult("You Win!")
+		if !sfxMuted:
+			gameEndSfx.stream = VictorySfx
+			gameEndSfx.play()
+		elif !voiceMuted:
+			_on_gameEndSfx_finished()
 
 func _on_grid_clearStart():
 	gameTimer.paused = true
@@ -158,10 +314,6 @@ func _on_grid_clearsComplete():
 		thongs.unflex()
 		gameTimer.paused = false
 		advanceQueue()
-
-func saveState():
-	previousStates.append(SaveState.of(grid.board, timeElapsed, [])) #todo queue
-	#todo check if this state is not the latest and if not, perform a rollback
 
 func _on_horizontalDas_timeout():
 	shiftPiece(horizontalDirection, 0)
@@ -190,7 +342,30 @@ func shiftPiece(horizontal: int, vertical: int):
 		if ok:
 			pieceXIndex += horizontal
 			pieceYIndex += vertical
+			if multiFlag:
+				if horizontal != 0:
+					moveGhostX.rpc(pieceXIndex)
+				if vertical != 0:
+					moveGhostY.rpc(pieceYIndex)
 			drawPlayerPiecePosition()
+
+@rpc("any_peer", "call_remote", "unreliable_ordered")
+func rotateGhost(newState: int):
+	ghostPiece.setSpin(newState)
+
+@rpc("any_peer", "call_remote", "unreliable_ordered")
+func moveGhostX(newX: int):
+	ghostPieceXIndex = newX
+	updateGhostPosition()
+
+@rpc("any_peer", "call_remote", "unreliable_ordered")
+func moveGhostY(newY: int):
+	ghostPieceYIndex = newY
+	updateGhostPosition()
+
+func updateGhostPosition():
+	ghostPiece.position = Vector2i(50 + ghostPieceXIndex * grid.cellSize,
+		35 + ghostPieceYIndex * grid.cellSize)
 
 func spin(direction: int):
 	var ghost: Array = playerPiece.predictSpin(direction)
@@ -215,24 +390,45 @@ func spin(direction: int):
 			break
 	#todo das to wall (very minor qol)
 	playerPiece.spin(direction)
+	if multiFlag:
+		rotateGhost.rpc(playerPiece.state)
 
 func drawPlayerPiecePosition():
-	if difficulty == 1:
-		playerPiece.position = Vector2i(9 + pieceXIndex * grid.cellSize, 11 + pieceYIndex * grid.cellSize)
+	if multiFlag: #todo
+		playerPiece.position = Vector2i(50 + pieceXIndex * grid.cellSize,
+		35 + pieceYIndex * grid.cellSize)
 	else:
-		playerPiece.position = Vector2i(50 + pieceXIndex * grid.cellSize, 35 + pieceYIndex * grid.cellSize)
+		if difficulty == 1:
+			playerPiece.position = Vector2i(9 + pieceXIndex * grid.cellSize,
+			11 + pieceYIndex * grid.cellSize)
+		else:
+			playerPiece.position = Vector2i(50 + pieceXIndex * grid.cellSize,
+			35 + pieceYIndex * grid.cellSize)
 
 func drawQueuePosition():
-	for i in queue.size():
-		queue[i].position = Vector2i(26 + (13) * 50,
-		(50 * 13 * 1) / 2 - ((4 * i) + 1) * 50)
+	if multiFlag:
+		for i in queue.size():
+			queue[i].position = Vector2i(26 + (13) * 50,
+			(50 * 13 * 1) / 2 - ((4 * i) + 1) * 50)
+	else:
+		for i in queue.size():
+			queue[i].position = Vector2i(26 + (13) * 50,
+			(50 * 13 * 1) / 2 - ((4 * i) + 1) * 50)
+
+@rpc("any_peer", "call_remote", "reliable")
+func backToLobby():
+	emit_signal("backToMenu")
 
 func _input(event):
 	if !event is InputEventMouseButton:
 		get_viewport().set_input_as_handled()
 	if enableQuickExit && event.is_action_pressed("place"):
+		if multiFlag:
+			backToLobby.rpc()
 		emit_signal("backToMenu")
 	elif event.is_action_pressed("exit") || event.is_action_pressed("start"):
+		if multiFlag:
+			backToLobby.rpc()
 		emit_signal("backToMenu")
 	elif event.is_action_pressed("left"):
 		if horizontalDirection == 1:
@@ -295,24 +491,252 @@ func _input(event):
 	elif event.is_action_pressed("ccw"):
 		spin(-1)
 	elif event.is_action_pressed("place") && playerPiece.visible:
-		if grid.place(playerPiece, pieceXIndex, pieceYIndex):
+		if multiFlag:
+			#todo handle spamming inputs while waiting for mutex,
+			# while locking out player input as little as possible. Yikes.
+			# First implementation probably just lock out everything while waiting for mutex.
+			# Take first placement and take no more until that one is resolved.
+			# ideally we would simulate all of those and then roll back if needed,
+			# but the only reason we would be waiting is for performance reasons, not latency.
+			# So it's probably needed.
+			placeAndResimulateLocal()
+		elif grid.place(playerPiece, pieceXIndex, pieceYIndex):
 			advanceQueue()
-			saveState()
-			#todo if a player clears two blocks then how do you track ownership of the second?
-			# The game doesn't know the difference.
-			# and if the other player adds to it and clears it, who owns it now?
-			#timeout place is another special case because I think it plays a different sound,
-			#and failed placement throws the piece away
+
+@rpc("any_peer", "call_remote", "reliable")
+func placeAndResimulate(seqIndex: int, x: int, y: int, rotate: int, timeElapsed: float, color: int):
+	mutex.lock()
+	#todo maybe turn off or on clear delay
+	#todo maybe rewind the piece queue and bonk
+	var i: int = previousStates.size() - 1
+	while previousStates[i].timeElapsed > timeElapsed:
+		i -= 1
+	var state = previousStates[i]
+	if state.timeElapsed == timeElapsed:
+		if state.playerId != 1 && !multiplayer.is_server():
+			i -= 1
+			state = previousStates[i]
+		elif ((state.playerId == 1 && !multiplayer.is_server())
+		|| (state.playerId != 1 && multiplayer.is_server())):
+			#two placements in one frame: ignore. I think this is paranoid coding though.
+			mutex.unlock()
+			return false
+	var piece = ghostSeq[ghostSeqIndex]
+	var shape = playerPiece.shapes[piece["shape"]][rotate]
+	var pieceCells = PackedInt32Array()
+	for j in shape.size():
+		if shape[j] == 2:
+			pieceCells.append(grid.getFlatIndex(Vector2i(x + (j % 5), y + (j / 5))))
+	var newBoard = grid.placePieceIntoBoard(pieceCells, color, state.board)
+	if newBoard == null:
+		mutex.unlock()
+		return false
+	else:
+		ghostPieceYIndex = grid.gridWidth / 2 - 2
+		if multiplayer.is_server():
+			ghostPieceXIndex = grid.gridWidth / 2 - 2 + 3
+		else:
+			ghostPieceXIndex = grid.gridWidth / 2 - 2 - 3
+		updateGhostPosition()
+		var serverBonkIndex = -2
+		var clientBonkIndex = -2
+		grid.placeSfx()
+		var id = 2
+		if !multiplayer.is_server():
+			id = 1
+		#check for clears
+		var clears: PackedInt32Array = PackedInt32Array()
+		var clearedBoard = grid.removeAllClears(newBoard)
+		if clearedBoard != null:
+			newBoard = clearedBoard["clearedBoard"]
+			clears = clearedBoard["clears"]
+			grid.playClearSfx()
+			#Start their clear delay if we aren't already in clear delay. End of clear delay will advance queue
+			#thongs.flex()
+		previousStates.insert(i + 1,SaveState.of(newBoard, timeElapsed, pieceCells, color, id,
+		clears, seqIndex))
+		#todo resimulate, basically just repeating what we just did for every save state until the end.
+		var statesToRemove: Array[int] = []
+		for r in range(i + 2, previousStates.size()):
+			var prevBoard = previousStates[r - 1]
+			var resimulateState = previousStates[r]
+			if ((resimulateState.playerId == 1 && serverBonkIndex > -2)
+			|| (resimulateState.playerId != 1 && clientBonkIndex > -2)):
+				resimulateState.board = prevBoard
+				statesToRemove.append(r)
+			else:
+				var nextBoard = grid.placePieceIntoBoard(resimulateState.cellIndexes.size(),
+				resimulateState.cellsColor, prevBoard)
+				if nextBoard == null:
+					#Bonk. All later states for this id should be removed.
+					resimulateState.board = prevBoard
+					statesToRemove.append(r)
+					if resimulateState.playerId == 1:
+						serverBonkIndex = resimulateState.pieceSeqIndex
+					else:
+						clientBonkIndex = resimulateState.pieceSeqIndex
+				else:
+					#check for clears
+					var clearedCells: PackedInt32Array = PackedInt32Array()
+					var boardAfterClears = grid.removeAllClears(nextBoard)
+					if boardAfterClears != null:
+						nextBoard = boardAfterClears["clearedBoard"]
+						clearedCells = clearedBoard["clears"]
+						#todo the way we handle clear delay here should be a tiny bit different.
+			#			if grid.clearDelay.is_stopped():
+			#				grid.clearDelay.start(4.0/3.0)
+			#				playerPiece.visible = false
+			#				thongs.flex()
+					previousStates[r] = SaveState.of(nextBoard, resimulateState.timeElapsed,
+					resimulateState.cellIndexes, resimulateState.cellsColor, resimulateState.playerId,
+					clearedCells, resimulateState.pieceSeqIndex)
+		#todo visual update of clears
+		for v in range(statesToRemove.size() - 1, -1, -1):
+			previousStates.remove_at(statesToRemove[v])
+		#todo only update cells that have changed, instead of all.
+		grid.updateBoard(previousStates[previousStates.size() - 1].board) 
+		grid.checkVictory()
+		ghostSeqIndex = seqIndex + 1
+		updateGhostQueueToIndex(ghostSeqIndex)
+		if (serverBonkIndex > -2 && !multiplayer.is_server()) || (clientBonkIndex > -2 && multiplayer.is_server()):
+			updateGhostQueueToIndex(clientBonkIndex)
+		if (serverBonkIndex > -2 && multiplayer.is_server()) || (clientBonkIndex > -2 && !multiplayer.is_server()):
+			updateQueueToIndex(serverBonkIndex)
+		mutex.unlock()
+		return true
+	mutex.unlock()
+
+func placeAndResimulateLocal() -> bool:
+	mutex.lock()
+	var i: int = previousStates.size() - 1
+	while previousStates[i].timeElapsed > timeElapsed:
+		i -= 1
+	var state = previousStates[i]
+	if state.timeElapsed == timeElapsed:
+		if state.playerId != 1 && multiplayer.is_server():
+			i -= 1
+			state = previousStates[i]
+		elif ((state.playerId == 1 && multiplayer.is_server())
+		|| (state.playerId != 1 && !multiplayer.is_server())):
+			#two placements in one frame: ignore. I think this is paranoid coding though.
+			mutex.unlock()
+			return false
+	var shape = playerPiece.getCurrentShape()
+	var pieceCells = PackedInt32Array()
+	for j in shape.size():
+		if shape[j] == 2:
+			pieceCells.append(grid.getFlatIndex(Vector2i(pieceXIndex + (j % 5), pieceYIndex + (j / 5))))
+	var newBoard = grid.placePieceIntoBoard(pieceCells, playerPiece.color, state.board)
+	if newBoard == null:
+		grid.bonkSfxPlay()
+		mutex.unlock()
+		return false
+	else:
+		var serverBonkIndex = -2
+		var clientBonkIndex = -2
+		placeAndResimulate.rpc(pieceSeqIndex, pieceXIndex, pieceYIndex, playerPiece.state, timeElapsed,
+		playerPiece.color)
+		grid.placeSfx()
+		var id = 2
+		if multiplayer.is_server():
+			id = 1
+		#check for clears
+		var clears: PackedInt32Array = PackedInt32Array()
+		var clearedBoard = grid.removeAllClears(newBoard)
+		if clearedBoard != null:
+			newBoard = clearedBoard["clearedBoard"]
+			clears = clearedBoard["clears"]
+			grid.playClearSfx()
+			#Start clear delay if we aren't already in clear delay. End of clear delay will advance queue
+			if grid.clearDelay.is_stopped():
+				grid.clearDelay.start(4.0/3.0)
+				playerPiece.visible = false
+				thongs.flex()
+		previousStates.insert(i + 1,SaveState.of(newBoard, timeElapsed, pieceCells, playerPiece.color, id,
+		clears, pieceSeqIndex))
+		#todo resimulate, basically just repeating what we just did for every save state until the end.
+		var statesToRemove: Array[int] = []
+		for r in range(i + 2, previousStates.size()):
+			var prevBoard = previousStates[r - 1]
+			var resimulateState = previousStates[r]
+			if ((resimulateState.playerId == 1 && serverBonkIndex > -2)
+			|| (resimulateState.playerId != 1 && clientBonkIndex > -2)):
+				resimulateState.board = prevBoard
+				statesToRemove.append(r)
+			else:
+				var nextBoard = grid.placePieceIntoBoard(resimulateState.cellIndexes.size(),
+				resimulateState.cellsColor, prevBoard)
+				if nextBoard == null:
+					#Bonk. All later states for this id should be removed.
+					resimulateState.board = prevBoard
+					statesToRemove.append(r)
+					if resimulateState.playerId == 1:
+						serverBonkIndex = resimulateState.pieceSeqIndex
+					else:
+						clientBonkIndex = resimulateState.pieceSeqIndex
+				else:
+					#check for clears
+					var clearedCells: PackedInt32Array = PackedInt32Array()
+					var boardAfterClears = grid.removeAllClears(nextBoard)
+					if boardAfterClears != null:
+						nextBoard = boardAfterClears["clearedBoard"]
+						clearedCells = clearedBoard["clears"]
+						#todo the way we handle clear delay here should be a tiny bit different.
+			#			if grid.clearDelay.is_stopped():
+			#				grid.clearDelay.start(4.0/3.0)
+			#				playerPiece.visible = false
+			#				thongs.flex()
+					previousStates[r] = SaveState.of(nextBoard, resimulateState.timeElapsed,
+					resimulateState.cellIndexes, resimulateState.cellsColor, resimulateState.playerId,
+					clearedCells, resimulateState.pieceSeqIndex)
+		#todo visual update of clears
+		for v in range(statesToRemove.size() - 1, -1, -1):
+			previousStates.remove_at(statesToRemove[v])
+		#todo only update cells that have changed, instead of all.
+		grid.updateBoard(previousStates[previousStates.size() - 1].board) 
+		grid.checkVictory()
+		if playerPiece.visible:
+			advanceQueue()
+		if (serverBonkIndex > -2 && !multiplayer.is_server()) || (clientBonkIndex > -2 && multiplayer.is_server()):
+			updateGhostQueueToIndex(clientBonkIndex)
+		if (serverBonkIndex > -2 && multiplayer.is_server()) || (clientBonkIndex > -2 && !multiplayer.is_server()):
+			updateQueueToIndex(serverBonkIndex)
+		mutex.unlock()
+		return true
+
+func updateGhostQueueToIndex(index):
+	ghostSeqIndex = index
+	ghostPiece.setRandomShape(grid.getRemainingColors(),
+	ghostSeq[ghostSeqIndex % ghostSeq.size()])
+#	for i in queue.size(): todo update for ghostly queue
+#		queue[i].setRandomShape(grid.getRemainingColors(),
+#		pieceSequence[(pieceSeqIndex + i + 1) % pieceSequence.size()])
+
+func updateQueueToIndex(index):
+	pieceSeqIndex = index
+	playerPiece.setRandomShape(grid.getRemainingColors(),
+	pieceSequence[pieceSeqIndex % pieceSequence.size()])
+	for i in queue.size():
+		queue[i].setRandomShape(grid.getRemainingColors(),
+		pieceSequence[(pieceSeqIndex + i + 1) % pieceSequence.size()])
 
 func advanceQueue():
 	if !grid.clearing:
 		playerPiece.visible = true
-		playerPiece.setPiece(queue[0])
-		for i in queue.size() - 1:
-			queue[i].setPiece(queue[i + 1])
-		queue[queue.size() - 1].setRandomShape(grid.getRemainingColors())
-		pieceXIndex = grid.gridWidth / 2 - 2
+		pieceSeqIndex += 1
+		playerPiece.setRandomShape(grid.getRemainingColors(),
+		pieceSequence[pieceSeqIndex % pieceSequence.size()])
+		for i in queue.size():
+			queue[i].setRandomShape(grid.getRemainingColors(),
+			pieceSequence[(pieceSeqIndex + i + 1) % pieceSequence.size()])
 		pieceYIndex = grid.gridHeight / 2 - 2
+		if multiFlag:
+			if multiplayer.is_server():
+				pieceXIndex = grid.gridWidth / 2 - 2 - 3
+			else:
+				pieceXIndex = grid.gridWidth / 2 - 2 + 3
+		else:
+			pieceXIndex = grid.gridWidth / 2 - 2
 		drawPlayerPiecePosition()
 	else:
 		playerPiece.visible = false

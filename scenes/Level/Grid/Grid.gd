@@ -26,6 +26,7 @@ preload("res://assets/audio/sfx/jingles_SAX10.wav"), preload("res://assets/audio
 preload("res://assets/audio/sfx/jingles_STEEL02.wav"), preload("res://assets/audio/sfx/jingles_STEEL10.wav"),
 preload("res://assets/audio/sfx/jingles_STEEL13.wav")]
 var tilemap
+var multiFlag: bool = false
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
@@ -103,22 +104,48 @@ func init():
 func _on_self_clearStart():
 	clearing = true
 	clearDelay.start()
+	playClearSfx()
+
+func playClearSfx():
 	if !sfxMuted:
 		clearSfx.stream = ClearSfxArray[randi_range(0, ClearSfxArray.size() - 1)]
 		clearSfx.play()
 
 func _on_clearDelay_timeout():
 	tilemap.clear_layer(1)
-	checkVictory()
-	if !checkClears() && clearing == true:
-		clearing = false
+	if multiFlag:
 		emit_signal("clearsComplete")
+	else:
+		checkVictory()
+		if !checkClears() && clearing == true:
+			clearing = false
+			emit_signal("clearsComplete")
 
 func muteSfx():
 	sfxMuted = true
 
 func getRemainingColors() -> Array[int]:
 	return remainingColors
+
+func updateBoard(passedBoard: PackedInt32Array):
+	#todo can improve the performance of this method if needed
+	tilemap.clear()
+	board.fill(Globals.PieceColor.Empty)
+	remainingColors.clear()
+	var pieceMap: Dictionary = {
+		Globals.PieceColor.Red: [],
+		Globals.PieceColor.Green: [],
+		Globals.PieceColor.Blue: [],
+		Globals.PieceColor.Yellow: []
+	}
+	for i in passedBoard.size():
+		var color = passedBoard[i]
+		if color != Globals.PieceColor.Empty:
+			pieceMap[color].append(i)
+			if !remainingColors.has(color):
+				remainingColors.append(color)
+	for color in pieceMap.keys():
+		setCells(color, pieceMap[color], {})
 
 func setCells(color: int, cells: Array, neighbors: Dictionary):
 	var coords: Array[Vector2i] = []
@@ -194,6 +221,27 @@ func updateRemainingColors():
 			colors.append(color)
 	remainingColors = colors
 
+func canPlace(playerPiece: Piece, pieceXIndex: int, pieceYIndex: int) -> bool:
+	var piece: Array = playerPiece.getCurrentShape()
+	for i in piece.size():
+		if piece[i] == 2:
+			var cellIndex: Vector2i = Vector2i(pieceXIndex + i % 5, pieceYIndex + i / 5)
+			var flatIndex: int = getFlatIndex(cellIndex)
+			if board[flatIndex] == playerPiece.color:
+				if !sfxMuted:
+					bonkSfx.stream = BonkSfxArray[randi_range(0, BonkSfxArray.size() - 1)]
+					bonkSfx.play()
+				return false
+	return true
+
+func placePieceIntoBoard(cells: PackedInt32Array, color: int, boardToPlaceInto: PackedInt32Array):
+	var result: PackedInt32Array = PackedInt32Array(boardToPlaceInto)
+	for cell in cells:
+		if result[cell] == color:
+			return null
+		result[cell] = color
+	return result
+
 func place(playerPiece: Piece, pieceXIndex: int, pieceYIndex: int) -> bool:
 	var piece: Array = playerPiece.getCurrentShape()
 	var cells: Array[int] = []
@@ -208,9 +256,7 @@ func place(playerPiece: Piece, pieceXIndex: int, pieceYIndex: int) -> bool:
 			var cellIndex: Vector2i = Vector2i(pieceXIndex + i % 5, pieceYIndex + i / 5)
 			var flatIndex: int = getFlatIndex(cellIndex)
 			if board[flatIndex] == playerPiece.color:
-				if !sfxMuted:
-					bonkSfx.stream = BonkSfxArray[randi_range(0, BonkSfxArray.size() - 1)]
-					bonkSfx.play()
+				bonkSfxPlay()
 				return false
 			cells.append(flatIndex)
 		elif piece[i] == 1:
@@ -229,6 +275,83 @@ func place(playerPiece: Piece, pieceXIndex: int, pieceYIndex: int) -> bool:
 	if !sfxMuted:
 		placePieceSfx.play()
 	return true
+
+func placeSfx():
+	if !sfxMuted:
+		placePieceSfx.play()
+
+func bonkSfxPlay():
+	if !sfxMuted:
+		bonkSfx.stream = BonkSfxArray[randi_range(0, BonkSfxArray.size() - 1)]
+		bonkSfx.play()
+
+func removeAllClears(board:PackedInt32Array):
+	var clears: Array[Dictionary] = []
+	# checkClears
+	for row in gridHeight - 1: # 0 to 11: can't squeeze a 2x3 into only the last row
+		var cell: int = row * gridWidth
+		while cell < ((row + 1) * gridWidth) - 1: #check all cells in row except the last one
+			var rightmostCell: int = cell + 1
+			while (board[cell] != Globals.PieceColor.Empty && board[cell] == board[rightmostCell]
+			&& rightmostCell < (row + 1) * gridWidth):
+				rightmostCell += 1
+			rightmostCell -= 1
+			if rightmostCell - cell > 0:
+				var leftCol: int = cell % gridWidth
+				var rightCol: int = rightmostCell % gridWidth
+				var scanRow: int = row + 1
+				var clear: PackedInt32Array = []
+				clear.append_array(range(cell, rightmostCell + 1))
+				var mismatch: bool = false
+				while scanRow < gridHeight:
+					#scan down
+					var start: int = leftCol + scanRow * gridWidth
+					var end: int = rightCol + scanRow * gridWidth
+					var done: bool = false
+					if ((leftCol == 0 || board[start - 1] != board[start])
+					&& (rightCol == gridWidth - 1 || board[end] != board[end + 1])):
+						while start <= end:
+							if board[start] != board[cell]:
+								if start % gridWidth != leftCol:
+									mismatch = true
+								done = true
+								break
+							start += 1
+						if !done:
+							clear.append_array(range(leftCol + scanRow * gridWidth, end + 1))
+							scanRow += 1
+					else:
+						break
+					if done:
+						break
+				if clear.size() >= 6 && !mismatch && scanRow > row + 1:
+					#check top and bottom row
+					var disgrace: bool = false
+					if row > 0:
+						var start: int = leftCol + (row - 1) * gridWidth
+						var end: int = rightCol + (row - 1) * gridWidth
+						while start <= end:
+							if board[start] == board[cell]:
+								disgrace = true
+								break
+							start += 1
+					if !disgrace && scanRow < gridHeight:
+						var start: int = leftCol + scanRow * gridWidth
+						var end: int = rightCol + scanRow * gridWidth
+						while start <= end:
+							if board[start] == board[cell]:
+								disgrace = true
+								break
+							start += 1
+					if !disgrace:
+						clears.append({"color": board[cell], "cells": clear})
+						for i in clear:
+							board[i] = Globals.PieceColor.Empty
+			cell = rightmostCell + 1
+	if clears.size() > 0:
+		return {"clearedBoard": board, "clears": clears}
+	else:
+		return null
 
 func checkClears() -> bool:
 	# checkClears
@@ -289,9 +412,6 @@ func checkClears() -> bool:
 							start += 1
 					if !disgrace:
 						emit_signal("clearStart")
-						if !sfxMuted:
-							clearSfx.stream = ClearSfxArray[randi_range(0, ClearSfxArray.size() - 1)]
-							clearSfx.play()
 						clearPieces(clear)
 						return true
 			cell = rightmostCell + 1
@@ -300,7 +420,6 @@ func checkClears() -> bool:
 func clearPieces(cells: PackedInt32Array):
 	var color: int = board[cells[0]]
 	for i in cells:
-		var twoDimensionalIndex: Vector2i = get2DIndex(i)
 		board[i] = Globals.PieceColor.Empty
 	visuallyEraseCells(cells, color)
 
