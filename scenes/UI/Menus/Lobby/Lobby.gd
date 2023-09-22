@@ -43,16 +43,16 @@ func _ready():
 func _on_ModeButton_pressed():
 	if mode == 0:
 		mode = 1
-		%ModeButton.text = "Split"
+		%ModeButton.text = "Split Colors"
 	elif mode == 1:
 		mode = 2
-		%ModeButton.text = "Versus"
+		%ModeButton.text = "    Versus    "
 	elif mode == 2:
 		mode = 0
-		%ModeButton.text = "Normal"
+		%ModeButton.text = "     Coop     "
 	else:
 		mode = 0
-		%ModeButton.text = "Normal"
+		%ModeButton.text = "     Coop     "
 
 func _on_server_disconnected():
 	%ConnectStatus.text = "Host disconnected"
@@ -137,18 +137,15 @@ func _on_Host_pressed():
 
 func _on_Join_pressed():
 	if %IP.text != null:
-		regex.compile("[1-2]?[0-9]?[0-9]\\.[1-2]?[0-9]?[0-9]\\.[1-2]?[0-9]?[0-9]\\.[1-2]?[0-9]?[0-9]")
-		var result = regex.search(%IP.text)
-		if result:
-			regex.compile(":[0-9]?[0-9]?[0-9]?[0-9][0-9]")
-			var result2 = regex.search(%IP.text)
-			if result2:
-				ip = result.get_string()
-				port = result2.get_string().substr(1)
-				hosting = false
-				openLobby()
-		#else:
-		#	regex.compile("\[?[a-fA-F0-9][a-fA-F0-9]?[a-fA-F0-9]?[a-fA-F0-9]?:[a-fA-F0-9][a-fA-F0-9]?[a-fA-F0-9]?[a-fA-F0-9]?:[a-fA-F0-9][a-fA-F0-9]?[a-fA-F0-9]?[a-fA-F0-9]?:[a-fA-F0-9][a-fA-F0-9]?[a-fA-F0-9]?[a-fA-F0-9]?:[a-fA-F0-9][a-fA-F0-9]?[a-fA-F0-9]?[a-fA-F0-9]?\]?:\d\d\d?\d?\d?")
+		regex.compile(":[0-9]?[0-9]?[0-9]?[0-9][0-9]")
+		var result = regex.search_all(%IP.text)
+		if result.size() > 0:
+			ip = %IP.text.substr(0, %IP.text.length() - result[result.size() - 1].get_string().length())
+			port = result[result.size() - 1].get_string().substr(1)
+			hosting = false
+			openLobby()
+			#else:
+			#	regex.compile("\[?[a-fA-F0-9][a-fA-F0-9]?[a-fA-F0-9]?[a-fA-F0-9]?:[a-fA-F0-9][a-fA-F0-9]?[a-fA-F0-9]?[a-fA-F0-9]?:[a-fA-F0-9][a-fA-F0-9]?[a-fA-F0-9]?[a-fA-F0-9]?:[a-fA-F0-9][a-fA-F0-9]?[a-fA-F0-9]?[a-fA-F0-9]?:[a-fA-F0-9][a-fA-F0-9]?[a-fA-F0-9]?[a-fA-F0-9]?\]?:\d\d\d?\d?\d?")
 
 func openLobby():
 	%HostJoin.visible = false

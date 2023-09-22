@@ -11,7 +11,7 @@ var difficulty = 2
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	thongs = DrThongs.instantiate()
-	thongs.position = Vector2(394, 420)
+	thongs.position = Vector2(244, 420)
 	thongs.scale = Vector2(-1, 1)
 	add_child(thongs)
 	%Mode.pressed.connect(_on_Mode_pressed)
