@@ -1,8 +1,9 @@
-[gd_scene load_steps=4 format=3 uid="uid://dv05bq3mf6c1j"]
+[gd_scene load_steps=5 format=3 uid="uid://dv05bq3mf6c1j"]
 
 [ext_resource type="Script" path="res://scenes/UI/Menus/Mode/Mode.gd" id="1_6djse"]
 [ext_resource type="Texture2D" uid="uid://bmjnp5n6j54ft" path="res://assets/ui-textures/DrThongsTitleScreen.png" id="2_5spn4"]
 [ext_resource type="Texture2D" uid="uid://bcwajgqp4asbo" path="res://assets/ui-textures/MenuSwitchIcon.png" id="3_81one"]
+[ext_resource type="Texture2D" uid="uid://b1svi48myet85" path="res://assets/ui-textures/ui_tutorial_text.png" id="4_67sw7"]
 
 [node name="Mode" type="CanvasLayer"]
 script = ExtResource("1_6djse")
@@ -73,3 +74,10 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 64
 text = "        Back        "
+
+[node name="Tutorial" type="TextureRect" parent="."]
+offset_left = 916.0
+offset_top = 340.0
+offset_right = 1270.0
+offset_bottom = 652.0
+texture = ExtResource("4_67sw7")
