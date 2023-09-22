@@ -7,9 +7,10 @@ var ip: String
 var hosting = false
 var GameManager = preload("res://scenes/Managers/GameManager/GameManager.tscn")
 var gameManager: GameManager
+var mode: int = 0
 
 signal back
-signal start(gameManager)
+signal start(gameManager, mode)
 # These signals can be connected to by a UI lobby scene or the game scene.
 signal player_connected(peer_id, player_info)
 signal player_disconnected(peer_id)
@@ -30,6 +31,7 @@ func _ready():
 	%Start.pressed.connect(_on_Start_pressed)
 	%BackToText.pressed.connect(_on_BackToText_pressed)
 	%Exit.pressed.connect(_on_Exit_pressed)
+	%ModeButton.pressed.connect(_on_ModeButton_pressed)
 	regex = RegEx.new()
 	%IP.grab_focus.call_deferred()
 	multiplayer.peer_connected.connect(_on_player_connected)
@@ -37,6 +39,20 @@ func _ready():
 	multiplayer.connected_to_server.connect(_on_connected_ok)
 	multiplayer.connection_failed.connect(_on_connected_fail)
 	multiplayer.server_disconnected.connect(_on_server_disconnected)
+
+func _on_ModeButton_pressed():
+	if mode == 0:
+		mode = 1
+		%ModeButton.text = "Split"
+	elif mode == 1:
+		mode = 2
+		%ModeButton.text = "Versus"
+	elif mode == 2:
+		mode = 0
+		%ModeButton.text = "Normal"
+	else:
+		mode = 0
+		%ModeButton.text = "Normal"
 
 func _on_server_disconnected():
 	%ConnectStatus.text = "Host disconnected"
@@ -63,13 +79,15 @@ func _register_player(new_player_info):
 # This allows transfer of all desired data for each player, not only the unique ID.
 func _on_player_connected(id):
 	_register_player.rpc_id(id, player_info)
-	%ConnectStatus.text = "Connected"
-	%Start.disabled = false
+	if multiplayer.is_server:
+		%ConnectStatus.text = "Connected"
+		%Start.disabled = false
 
 func _on_player_disconnected(id):
 	player_info.erase(id)
 	player_disconnected.emit(id)
-	%ConnectStatus.text = "Waiting for connection..."
+	%ConnectStatus.text = "Waiting..."
+	%ModeSelect.visible = false
 	%Start.disabled = true
 
 func _on_Exit_pressed():
@@ -101,12 +119,12 @@ func remove_multiplayer_peer():
 @rpc("call_local", "reliable")
 func load_game(mode: int):
 	gameManager = GameManager.instantiate()
-	emit_signal("start", gameManager)
+	emit_signal("start", gameManager, mode)
 
 func _on_Start_pressed():
 	if startEnabled:
 		startEnabled = false
-		load_game.rpc(0) #If there's a game mode, can pass it here
+		load_game.rpc(mode) #If there's a game mode, can pass it here
 
 func _on_Host_pressed():
 	if %Port.text != null:
@@ -133,16 +151,19 @@ func _on_Join_pressed():
 func openLobby():
 	%HostJoin.visible = false
 	%PortText.text = port
-	%ConnectStatus.text = "Waiting for connection..."
+	%ConnectStatus.text = "Waiting..."
 	%Start.disabled = true
 	%Lobby.visible = true
 	if hosting:
+		%ModeSelect.visible = false
 		%Start.visible = true
+		%ModeSelect.visible = true
 		%Mode.text = "Hosting"
 		%IPInfo.visible = false
 		player_info["name"] = "Host"
 		create_game(port)
 	else:
+		%ModeSelect.visible = false
 		%Start.visible = false
 		%Mode.text = "Joining"
 		%IPText.text = ip

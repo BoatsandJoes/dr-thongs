@@ -11,6 +11,7 @@ var remainingColors: Array[int]
 var sfxMuted: bool = false
 var difficulty: int = 2
 signal victory
+signal lost
 signal clearStart
 signal clearsComplete
 var placePieceSfx: AudioStreamPlayer
@@ -116,7 +117,7 @@ func _on_clearDelay_timeout():
 	if multiFlag:
 		emit_signal("clearsComplete")
 	else:
-		checkVictory()
+		checkVictory(null, null)
 		if !checkClears() && clearing == true:
 			clearing = false
 			emit_signal("clearsComplete")
@@ -433,10 +434,27 @@ func clearPieces(cells: PackedInt32Array):
 		board[i] = Globals.PieceColor.Empty
 	visuallyEraseCells(cells, color)
 
-func checkVictory():
-	for i in board.size():
-		if board[i] != Globals.PieceColor.Empty:
+func checkVictory(mode, isServer):
+	if mode != null && mode == 2:
+		var won = true
+		var lost = true
+		for i in board.size():
+			if (isServer && (board[i] == Globals.PieceColor.Red || board[i] == Globals.PieceColor.Yellow)
+			|| !isServer && (board[i] == Globals.PieceColor.Blue || board[i] == Globals.PieceColor.Green)):
+				won = false
+			if (!isServer && (board[i] == Globals.PieceColor.Red || board[i] == Globals.PieceColor.Yellow)
+			|| isServer && (board[i] == Globals.PieceColor.Blue || board[i] == Globals.PieceColor.Green)):
+				lost = false
+			if !won && !lost:
+				break
+		if lost:
+			emit_signal("lost")
+		if !won:
 			return
+	else:
+		for i in board.size():
+			if board[i] != Globals.PieceColor.Empty:
+				return
 	emit_signal("victory")
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.

@@ -46,6 +46,7 @@ var sfxMuted: bool = false
 var musicMuted: bool = false
 var won: bool = false
 var difficulty: int = 0
+var mode: int = 0
 var multiFlag = false
 var pingTimer: Timer
 var pingTestTimeElapsed: float
@@ -69,24 +70,25 @@ func _ready():
 	grid.clearStart.connect(_on_grid_clearStart)
 	grid.clearsComplete.connect(_on_grid_clearsComplete)
 	grid.victory.connect(_on_grid_victory)
+	grid.lost.connect(_on_grid_lost)
 	grid.difficulty = difficulty
 	add_child(grid)
 	grid.init()
 	ghostPiece = Piece.instantiate()
-	ghostPiece.set_modulate(Color(1,1,1,0.5))
+	ghostPiece.set_modulate(Color(1,1,1,0.6))
 	add_child(ghostPiece)
 	playerPiece = Piece.instantiate()
 	add_child(playerPiece)
 	if difficulty == 1:
 		playerPiece.easy()
 	generatePieceSequence()
-	playerPiece.setRandomShape(grid.getRemainingColors(),
+	playerPiece.setRandomShape(mode, multiplayer.is_server(), grid.getRemainingColors(),
 	pieceSequence[pieceSeqIndex % pieceSequence.size()])
 	pieceYIndex = grid.gridWidth / 2 - 2
 	queue = [Piece.instantiate(), Piece.instantiate()]
 	for piece in range(queue.size()):
 		add_child(queue[piece])
-		queue[piece].setRandomShape(grid.getRemainingColors(),
+		queue[piece].setRandomShape(mode, multiplayer.is_server(), grid.getRemainingColors(),
 		pieceSequence[(pieceSeqIndex + piece + 1) % pieceSequence.size()])
 	horizontalDas = Timer.new()
 	verticalDas = Timer.new()
@@ -181,7 +183,7 @@ func syncStateClient(json: String):
 	var result = JSON.parse_string(json)
 	grid.updateBoard(floatArrayToPackedInt32(result["board"]))
 	ghostSeq = pieceSeqDictFixTypes(result["pieceSeq"])
-	ghostPiece.setRandomShape(grid.getRemainingColors(),
+	ghostPiece.setRandomShape(mode, true, grid.getRemainingColors(),
 	ghostSeq[ghostSeqIndex % ghostSeq.size()])
 	ghostPieceYIndex = grid.gridWidth / 2 - 2
 	ghostPieceXIndex = grid.gridWidth / 2 - 2 - 3
@@ -194,7 +196,7 @@ func syncStateClient(json: String):
 @rpc("any_peer","call_remote","reliable")
 func syncStateServer(pieceSeq: String):
 	ghostSeq = pieceSeqDictFixTypes(JSON.parse_string(pieceSeq)["pieceSeq"])
-	ghostPiece.setRandomShape(grid.getRemainingColors(),
+	ghostPiece.setRandomShape(mode, false, grid.getRemainingColors(),
 	ghostSeq[ghostSeqIndex % ghostSeq.size()])
 	ghostPieceYIndex = grid.gridWidth / 2 - 2
 	ghostPieceXIndex = grid.gridWidth / 2 - 2 + 3
@@ -229,7 +231,10 @@ func startTimer(halfPing: float):
 
 func _on_pingTimer_timeout():
 	timeElapsed = 0
-	gameTimer.start()
+	if mode != 2:
+		gameTimer.start()
+	else:
+		hud.hideTimer()
 	playerPiece.visible = true
 
 func setDifficulty(difficulty: int):
@@ -255,16 +260,21 @@ func _on_music_finished():
 func _on_gameEndSfx_finished():
 	if !voicePlayed:
 		gameEndSfx.set_bus("Reduce")
-		if gameTimer.is_stopped():
-			gameEndSfx.stream = GameOverVoice
-		else:
+		if !gameTimer.is_stopped() || (mode == 2 && thongs.isFlex()):
 			gameEndSfx.stream = VictoryVoice
+		else:
+			gameEndSfx.stream = GameOverVoice
 		voicePlayed = true
 		if !voiceMuted:
 			gameEndSfx.play()
 	else:
 		voicePlayed = false
 		enableQuickExit = true
+
+func _on_grid_lost():
+	gameTimer.paused = true
+	grid.clearDelay.stop()
+	_on_gameTimer_timeout()
 
 func _on_gameTimer_timeout():
 	music.stop()
@@ -587,7 +597,7 @@ func placeAndResimulate(seqIndex: int, x: int, y: int, rotate: int, timeElapsed:
 			previousStates.remove_at(statesToRemove[v])
 		#todo only update cells that have changed, instead of all.
 		grid.updateBoard(previousStates[previousStates.size() - 1].board) 
-		grid.checkVictory()
+		grid.checkVictory(mode, multiplayer.is_server())
 		ghostSeqIndex = seqIndex + 1
 		updateGhostQueueToIndex(ghostSeqIndex)
 		if (serverBonkIndex > -2 && !multiplayer.is_server()) || (clientBonkIndex > -2 && multiplayer.is_server()):
@@ -691,7 +701,7 @@ func placeAndResimulateLocal() -> bool:
 			previousStates.remove_at(statesToRemove[v])
 		#todo only update cells that have changed, instead of all.
 		grid.updateBoard(previousStates[previousStates.size() - 1].board) 
-		grid.checkVictory()
+		grid.checkVictory(mode, multiplayer.is_server())
 		if playerPiece.visible:
 			advanceQueue()
 		if (serverBonkIndex > -2 && !multiplayer.is_server()) || (clientBonkIndex > -2 && multiplayer.is_server()):
@@ -703,7 +713,7 @@ func placeAndResimulateLocal() -> bool:
 
 func updateGhostQueueToIndex(index):
 	ghostSeqIndex = index
-	ghostPiece.setRandomShape(grid.getRemainingColors(),
+	ghostPiece.setRandomShape(mode, !multiplayer.is_server(), grid.getRemainingColors(),
 	ghostSeq[ghostSeqIndex % ghostSeq.size()])
 #	for i in queue.size(): todo update for ghostly queue
 #		queue[i].setRandomShape(grid.getRemainingColors(),
@@ -711,20 +721,22 @@ func updateGhostQueueToIndex(index):
 
 func updateQueueToIndex(index):
 	pieceSeqIndex = index
-	playerPiece.setRandomShape(grid.getRemainingColors(),
+	playerPiece.setRandomShape(mode, multiplayer.is_server(), grid.getRemainingColors(),
 	pieceSequence[pieceSeqIndex % pieceSequence.size()])
 	for i in queue.size():
-		queue[i].setRandomShape(grid.getRemainingColors(),
+		queue[i].setRandomShape(mode, multiplayer.is_server(), grid.getRemainingColors(),
 		pieceSequence[(pieceSeqIndex + i + 1) % pieceSequence.size()])
 
 func advanceQueue():
+	#todo there's a "feature" where when a color is wiped, it is also wiped from the queue.
+	# honestly... it's probably better this way. But consider fixing.
 	if !grid.clearing:
 		playerPiece.visible = true
 		pieceSeqIndex += 1
-		playerPiece.setRandomShape(grid.getRemainingColors(),
+		playerPiece.setRandomShape(mode, multiplayer.is_server(), grid.getRemainingColors(),
 		pieceSequence[pieceSeqIndex % pieceSequence.size()])
 		for i in queue.size():
-			queue[i].setRandomShape(grid.getRemainingColors(),
+			queue[i].setRandomShape(mode, multiplayer.is_server(), grid.getRemainingColors(),
 			pieceSequence[(pieceSeqIndex + i + 1) % pieceSequence.size()])
 		pieceYIndex = grid.gridHeight / 2 - 2
 		if multiFlag:

@@ -33,12 +33,13 @@ func player_loaded():
 			gameManager.start_multiplayer_game()
 			players_loaded = 0
 
-func _on_lobby_start(game):
+func _on_lobby_start(game, mode):
 	remove_child(lobby)
 	gameManager = game
 	gameManager.loaded_multiplayer.connect(_on_gameManager_loaded_multiplayer)
 	gameManager.backToMenu.connect(onlineGameBackToLobby)
 	gameManager.disconnected.connect(_on_mainMenu_multi) #todo disconnected never emits.
+	gameManager.mode = mode
 	add_child(gameManager, true)
 	if muted:
 		gameManager.muteMusic()

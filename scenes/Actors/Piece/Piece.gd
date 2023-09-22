@@ -210,13 +210,29 @@ func setPiece(piece: Piece):
 	self.color = piece.color
 	updateTilemap()
 
-func setRandomShape(colors: Array[int], seq):
-	if colors.size() > 0:
+func setRandomShape(mode: int, isServer: bool, colors: Array[int], seq):
+	if mode == 0:
+		#normal
+		if colors.size() > 0:
+			var pickColor: int
+			for order in seq.color_order:
+				if colors.has(order):
+					pickColor = order
+					break
+			setShape(shapes[seq.shape], seq.state, pickColor)
+	elif mode == 1 || mode == 2:
+		#split
 		var pickColor: int
-		for order in seq.color_order:
-			if colors.has(order): #xxx
-				pickColor = order
-				break
+		if isServer:
+			for order in seq.color_order:
+				if order == Globals.PieceColor.Red || order == Globals.PieceColor.Yellow:
+					pickColor = order
+					break
+		else:
+			for order in seq.color_order:
+				if order == Globals.PieceColor.Blue || order == Globals.PieceColor.Green:
+					pickColor = order
+					break
 		setShape(shapes[seq.shape], seq.state, pickColor)
 
 func predictSpin(direction: int) -> Array:

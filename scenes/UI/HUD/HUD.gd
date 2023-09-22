@@ -25,6 +25,9 @@ func updateResult(text: String):
 	else:
 		%Win.text = text
 
+func hideTimer():
+	%TimerDisplay.visible = false
+
 func updateTimer(seconds: float):
 	var secondsInt = floori(seconds)
 	if secondsInt > 59:

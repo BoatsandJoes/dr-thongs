@@ -75,57 +75,60 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 64
 text = "Back"
 
-[node name="Lobby" type="VBoxContainer" parent="MarginContainer/VBoxContainer"]
+[node name="Lobby" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 
-[node name="Mode" type="Label" parent="MarginContainer/VBoxContainer/Lobby"]
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/Lobby"]
+layout_mode = 2
+
+[node name="Mode" type="Label" parent="MarginContainer/VBoxContainer/Lobby/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 64
 text = "Hosting"
 
-[node name="IPInfo" type="HBoxContainer" parent="MarginContainer/VBoxContainer/Lobby"]
+[node name="IPInfo" type="HBoxContainer" parent="MarginContainer/VBoxContainer/Lobby/VBoxContainer"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 
-[node name="Label" type="Label" parent="MarginContainer/VBoxContainer/Lobby/IPInfo"]
+[node name="Label" type="Label" parent="MarginContainer/VBoxContainer/Lobby/VBoxContainer/IPInfo"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 64
 text = "IP:"
 
-[node name="IPText" type="Label" parent="MarginContainer/VBoxContainer/Lobby/IPInfo"]
+[node name="IPText" type="Label" parent="MarginContainer/VBoxContainer/Lobby/VBoxContainer/IPInfo"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 64
 text = "127.0.0.1"
 
-[node name="HBoxContainer2" type="HBoxContainer" parent="MarginContainer/VBoxContainer/Lobby"]
+[node name="HBoxContainer2" type="HBoxContainer" parent="MarginContainer/VBoxContainer/Lobby/VBoxContainer"]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="MarginContainer/VBoxContainer/Lobby/HBoxContainer2"]
+[node name="Label" type="Label" parent="MarginContainer/VBoxContainer/Lobby/VBoxContainer/HBoxContainer2"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 64
 text = "Port:"
 
-[node name="PortText" type="Label" parent="MarginContainer/VBoxContainer/Lobby/HBoxContainer2"]
+[node name="PortText" type="Label" parent="MarginContainer/VBoxContainer/Lobby/VBoxContainer/HBoxContainer2"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 64
 text = "7000"
 
-[node name="ConnectStatus" type="Label" parent="MarginContainer/VBoxContainer/Lobby"]
+[node name="ConnectStatus" type="Label" parent="MarginContainer/VBoxContainer/Lobby/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 64
 text = "Waiting for connection..."
 
-[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer/Lobby"]
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer/Lobby/VBoxContainer"]
 layout_mode = 2
 
-[node name="Start" type="Button" parent="MarginContainer/VBoxContainer/Lobby/HBoxContainer"]
+[node name="Start" type="Button" parent="MarginContainer/VBoxContainer/Lobby/VBoxContainer/HBoxContainer"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
@@ -133,8 +136,19 @@ theme_override_font_sizes/font_size = 64
 disabled = true
 text = "Start!"
 
-[node name="BackToText" type="Button" parent="MarginContainer/VBoxContainer/Lobby/HBoxContainer"]
+[node name="BackToText" type="Button" parent="MarginContainer/VBoxContainer/Lobby/VBoxContainer/HBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 64
 text = "Back"
+
+[node name="ModeSelect" type="VBoxContainer" parent="MarginContainer/VBoxContainer/Lobby"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+
+[node name="ModeButton" type="Button" parent="MarginContainer/VBoxContainer/Lobby/ModeSelect"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 64
+text = "Normal"
