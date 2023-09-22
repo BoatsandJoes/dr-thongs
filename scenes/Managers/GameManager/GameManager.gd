@@ -523,6 +523,7 @@ func placeAndResimulate(seqIndex: int, x: int, y: int, rotate: int, timeElapsed:
 			state = previousStates[i]
 		elif ((state.playerId == 1 && !multiplayer.is_server())
 		|| (state.playerId != 1 && multiplayer.is_server())):
+			print("It happened remote! ", state, ghostSeq[ghostSeqIndex], x, y, rotate, color)
 			#two placements in one frame: ignore. I think this is paranoid coding though.
 			mutex.unlock()
 			return false
@@ -580,7 +581,14 @@ func placeAndResimulate(seqIndex: int, x: int, y: int, rotate: int, timeElapsed:
 			else:
 				var nextBoard = grid.placePieceIntoBoard(resimulateState.cellIndexes.size(),
 				resimulateState.cellsColor, prevBoard)
+				print("resimulate remote:")
+				print("prev board: ", prevBoard)
+				print("resimulate state: ", resimulateState)
+				print("next board: ", nextBoard)
+				print("\n\n\n")
 				if nextBoard == null:
+					print("REMOTE BONK! Old Board: ", prevBoard)
+					print("Placement: ", resimulateState)
 					#Bonk. All later states for this id should be removed.
 					resimulateState.board = prevBoard
 					statesToRemove.append(r)
@@ -633,6 +641,7 @@ func placeAndResimulateLocal() -> bool:
 			state = previousStates[i]
 		elif ((state.playerId == 1 && multiplayer.is_server())
 		|| (state.playerId != 1 && !multiplayer.is_server())):
+			print("It happened local! ", state, playerPiece, pieceXIndex, pieceYIndex)
 			#two placements in one frame: ignore. I think this is paranoid coding though.
 			mutex.unlock()
 			return false
@@ -684,8 +693,15 @@ func placeAndResimulateLocal() -> bool:
 			else:
 				var nextBoard = grid.placePieceIntoBoard(resimulateState.cellIndexes.size(),
 				resimulateState.cellsColor, prevBoard)
+				print("resimulate local:")
+				print("prev board: ", prevBoard)
+				print("resimulate state: ", resimulateState)
+				print("next board: ", nextBoard)
+				print("\n\n\n")
 				if nextBoard == null:
 					#Bonk. All later states for this id should be removed.
+					print("BONK! Old Board: ", prevBoard)
+					print("Placement: ", resimulateState)
 					resimulateState.board = prevBoard
 					statesToRemove.append(r)
 					if resimulateState.playerId == 1:
@@ -715,12 +731,12 @@ func placeAndResimulateLocal() -> bool:
 		#todo only update cells that have changed, instead of all.
 		grid.updateBoard(previousStates[previousStates.size() - 1].board) 
 		grid.checkVictory(mode, multiplayer.is_server())
-		if playerPiece.visible:
-			advanceQueue()
 		if (serverBonkIndex > -2 && !multiplayer.is_server()) || (clientBonkIndex > -2 && multiplayer.is_server()):
 			updateGhostQueueToIndex(clientBonkIndex)
 		if (serverBonkIndex > -2 && multiplayer.is_server()) || (clientBonkIndex > -2 && !multiplayer.is_server()):
 			updateQueueToIndex(serverBonkIndex)
+		elif playerPiece.visible:
+			advanceQueue()
 		mutex.unlock()
 		return true
 
