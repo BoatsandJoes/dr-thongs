@@ -129,7 +129,7 @@ func getRemainingColors() -> Array[int]:
 
 func updateBoard(passedBoard: PackedInt32Array):
 	#todo can improve the performance of this method if needed
-	tilemap.clear()
+	tilemap.clear_layer(0)
 	board.fill(Globals.PieceColor.Empty)
 	remainingColors.clear()
 	var pieceMap: Dictionary = {
@@ -352,6 +352,16 @@ func removeAllClears(board:PackedInt32Array):
 		return {"clearedBoard": board, "clears": clears}
 	else:
 		return null
+
+func updateClearsMulti(clears: Array):
+	if clears.size() > 0:
+		#tilemap.clear_layer(1)
+		var cells: Array = []
+		for clear in clears:
+			#{"color": int, "cells": PackedInt32Array}
+			for entry in clear["cells"]:
+				cells.append(get2DIndex(entry))
+			tilemap.set_cells_terrain_connect(1, cells, clear["color"] - 1, 0)
 
 func checkClears() -> bool:
 	# checkClears

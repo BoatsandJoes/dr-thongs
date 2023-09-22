@@ -278,7 +278,7 @@ func _on_gameTimer_timeout():
 		_on_gameEndSfx_finished()
 
 func _on_grid_victory():
-	if multiFlag:
+	if false: #multiFlag:
 		#todo multiplayer victory check
 		pass
 	else:
@@ -492,13 +492,6 @@ func _input(event):
 		spin(-1)
 	elif event.is_action_pressed("place") && playerPiece.visible:
 		if multiFlag:
-			#todo handle spamming inputs while waiting for mutex,
-			# while locking out player input as little as possible. Yikes.
-			# First implementation probably just lock out everything while waiting for mutex.
-			# Take first placement and take no more until that one is resolved.
-			# ideally we would simulate all of those and then roll back if needed,
-			# but the only reason we would be waiting is for performance reasons, not latency.
-			# So it's probably needed.
 			placeAndResimulateLocal()
 		elif grid.place(playerPiece, pieceXIndex, pieceYIndex):
 			advanceQueue()
@@ -507,7 +500,6 @@ func _input(event):
 func placeAndResimulate(seqIndex: int, x: int, y: int, rotate: int, timeElapsed: float, color: int):
 	mutex.lock()
 	#todo maybe turn off or on clear delay
-	#todo maybe rewind the piece queue and bonk
 	var i: int = previousStates.size() - 1
 	while previousStates[i].timeElapsed > timeElapsed:
 		i -= 1
@@ -545,7 +537,7 @@ func placeAndResimulate(seqIndex: int, x: int, y: int, rotate: int, timeElapsed:
 		if !multiplayer.is_server():
 			id = 1
 		#check for clears
-		var clears: PackedInt32Array = PackedInt32Array()
+		var clears = []
 		var clearedBoard = grid.removeAllClears(newBoard)
 		if clearedBoard != null:
 			newBoard = clearedBoard["clearedBoard"]
@@ -555,7 +547,7 @@ func placeAndResimulate(seqIndex: int, x: int, y: int, rotate: int, timeElapsed:
 			#thongs.flex()
 		previousStates.insert(i + 1,SaveState.of(newBoard, timeElapsed, pieceCells, color, id,
 		clears, seqIndex))
-		#todo resimulate, basically just repeating what we just did for every save state until the end.
+		#resimulate, basically just repeating what we just did for every save state until the end.
 		var statesToRemove: Array[int] = []
 		for r in range(i + 2, previousStates.size()):
 			var prevBoard = previousStates[r - 1]
@@ -641,7 +633,7 @@ func placeAndResimulateLocal() -> bool:
 		if multiplayer.is_server():
 			id = 1
 		#check for clears
-		var clears: PackedInt32Array = PackedInt32Array()
+		var clears = []
 		var clearedBoard = grid.removeAllClears(newBoard)
 		if clearedBoard != null:
 			newBoard = clearedBoard["clearedBoard"]
@@ -654,7 +646,10 @@ func placeAndResimulateLocal() -> bool:
 				thongs.flex()
 		previousStates.insert(i + 1,SaveState.of(newBoard, timeElapsed, pieceCells, playerPiece.color, id,
 		clears, pieceSeqIndex))
-		#todo resimulate, basically just repeating what we just did for every save state until the end.
+		#resimulate, basically just repeating what we just did for every save state until the end.
+		var allClears: Array = []
+		if clears.size() > 0:
+			allClears.append_array(clears)
 		var statesToRemove: Array[int] = []
 		for r in range(i + 2, previousStates.size()):
 			var prevBoard = previousStates[r - 1]
@@ -681,6 +676,7 @@ func placeAndResimulateLocal() -> bool:
 					if boardAfterClears != null:
 						nextBoard = boardAfterClears["clearedBoard"]
 						clearedCells = clearedBoard["clears"]
+						allClears.append_array(clearedCells)
 						#todo the way we handle clear delay here should be a tiny bit different.
 			#			if grid.clearDelay.is_stopped():
 			#				grid.clearDelay.start(4.0/3.0)
@@ -690,6 +686,7 @@ func placeAndResimulateLocal() -> bool:
 					resimulateState.cellIndexes, resimulateState.cellsColor, resimulateState.playerId,
 					clearedCells, resimulateState.pieceSeqIndex)
 		#todo visual update of clears
+		grid.updateClearsMulti(allClears)
 		for v in range(statesToRemove.size() - 1, -1, -1):
 			previousStates.remove_at(statesToRemove[v])
 		#todo only update cells that have changed, instead of all.
