@@ -20,10 +20,22 @@ var players_loaded = 0
 var difficulty = 2
 var playersLoadedIntoLobby: int = 0
 var won = false
+var volume: float = 0.0
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	navToMain()
+
+func _on_Options_volume(volume):
+	self.volume = volume
+	setVol()
+
+func setVol():
+	if volume <= -60.0:
+		AudioServer.set_bus_mute(AudioServer.get_bus_index("Master"), true)
+	else:
+		AudioServer.set_bus_mute(AudioServer.get_bus_index("Master"), false)
+		AudioServer.set_bus_volume_db(AudioServer.get_bus_index("Master"), volume)
 
 # Every peer will call this when they have loaded the game scene. Lobby.player_loaded.rpc_id(1)
 @rpc("any_peer", "call_local", "reliable")
@@ -161,12 +173,14 @@ func navToOptions():
 	if credits != null:
 		credits.queue_free()
 	options = Options.instantiate()
+	options.volume.connect(_on_Options_volume)
 	options.mute_music.connect(_on_options_mute_music)
 	options.mute_voice.connect(_on_options_mute_voice)
 	options.mute_sfx.connect(_on_options_mute_sfx)
 	options.credits.connect(_on_options_credits)
 	options.back.connect(_on_options_back)
 	add_child(options)
+	options.setVolume(volume)
 	if voiceMuted:
 		options.setVoiceMuted()
 	if muted:
