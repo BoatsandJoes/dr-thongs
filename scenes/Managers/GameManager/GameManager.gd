@@ -523,7 +523,7 @@ func placeAndResimulate(seqIndex: int, x: int, y: int, rotate: int, timeElapsed:
 			state = previousStates[i]
 		elif ((state.playerId == 1 && !multiplayer.is_server())
 		|| (state.playerId != 1 && multiplayer.is_server())):
-			print("It happened remote! ", state, ghostSeq[ghostSeqIndex], x, y, rotate, color)
+			print("It happened remote! ", state.playerId, state.cellIndexes, state.cellsColor, ghostSeq[ghostSeqIndex], x, y, rotate, color)
 			#two placements in one frame: ignore. I think this is paranoid coding though.
 			mutex.unlock()
 			return false
@@ -583,12 +583,12 @@ func placeAndResimulate(seqIndex: int, x: int, y: int, rotate: int, timeElapsed:
 				resimulateState.cellsColor, prevBoard)
 				print("resimulate remote:")
 				print("prev board: ", prevBoard)
-				print("resimulate state: ", resimulateState)
+				print("resimulate state: ", resimulateState.cellIndexes, resimulateState.cellsColor, resimulateState.playerId)
 				print("next board: ", nextBoard)
 				print("\n\n\n")
 				if nextBoard == null:
 					print("REMOTE BONK! Old Board: ", prevBoard)
-					print("Placement: ", resimulateState)
+					print("Placement: ", resimulateState.cellIndexes, resimulateState.cellsColor, resimulateState.playerId)
 					#Bonk. All later states for this id should be removed.
 					resimulateState.board = prevBoard
 					statesToRemove.append(r)
@@ -641,7 +641,7 @@ func placeAndResimulateLocal() -> bool:
 			state = previousStates[i]
 		elif ((state.playerId == 1 && multiplayer.is_server())
 		|| (state.playerId != 1 && !multiplayer.is_server())):
-			print("It happened local! ", state, playerPiece, pieceXIndex, pieceYIndex)
+			print("It happened local! ", state.playerId, state.cellIndexes, state.cellsColor, playerPiece.color, playerPiece.getCurrentShape(), pieceXIndex, pieceYIndex)
 			#two placements in one frame: ignore. I think this is paranoid coding though.
 			mutex.unlock()
 			return false
@@ -695,13 +695,13 @@ func placeAndResimulateLocal() -> bool:
 				resimulateState.cellsColor, prevBoard)
 				print("resimulate local:")
 				print("prev board: ", prevBoard)
-				print("resimulate state: ", resimulateState)
+				print("resimulate state: ", resimulateState.cellIndexes, resimulateState.cellsColor, resimulateState.playerId)
 				print("next board: ", nextBoard)
 				print("\n\n\n")
 				if nextBoard == null:
 					#Bonk. All later states for this id should be removed.
 					print("BONK! Old Board: ", prevBoard)
-					print("Placement: ", resimulateState)
+					print("Placement: ", resimulateState.cellIndexes, resimulateState.cellsColor, resimulateState.playerId)
 					resimulateState.board = prevBoard
 					statesToRemove.append(r)
 					if resimulateState.playerId == 1:
