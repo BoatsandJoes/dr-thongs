@@ -222,17 +222,21 @@ func setRandomShape(mode: int, isServer: bool, colors: Array[int], seq):
 			setShape(shapes[seq.shape], seq.state, pickColor)
 	elif mode == 1 || mode == 2:
 		#split
-		var pickColor: int
+		var pickColor: int = -1
 		if isServer:
 			for order in seq.color_order:
 				if order == Globals.PieceColor.Red || order == Globals.PieceColor.Yellow:
-					pickColor = order
-					break
+					if colors.has(order):
+						pickColor = order
+						break
 		else:
 			for order in seq.color_order:
 				if order == Globals.PieceColor.Blue || order == Globals.PieceColor.Green:
-					pickColor = order
-					break
+					if colors.has(order):
+						pickColor = order
+						break
+		if pickColor == -1:
+			pickColor = self.color
 		setShape(shapes[seq.shape], seq.state, pickColor)
 
 func predictSpin(direction: int) -> Array:

@@ -518,7 +518,6 @@ func _input(event):
 @rpc("any_peer", "call_remote", "reliable")
 func placeAndResimulate(seqIndex: int, x: int, y: int, rotate: int, timeElapsed: float, color: int):
 	mutex.lock()
-	#todo maybe turn off or on clear delay
 	var i: int = previousStates.size() - 1
 	while previousStates[i].timeElapsed > timeElapsed:
 		i -= 1
@@ -761,17 +760,18 @@ func advanceGhostQueue():
 	updateGhostPosition()
 
 func advanceQueue():
-	#todo there's a "feature" where when a color is wiped, it is also wiped from the queue.
-	# honestly... it's probably better this way. But consider fixing.
+	#todo make sure that color sequence modification doesn't result in WILD bugs.
 	if !grid.clearing:
 		playerPiece.visible = true
 		pieceSeqIndex += 1
 		if multiFlag:
-			playerPiece.setRandomShape(mode, multiplayer.is_server(), grid.getRemainingColors(),
-			pieceSequence[pieceSeqIndex % pieceSequence.size()])
+			playerPiece.setPiece(queue[0])
 			for i in queue.size():
-				queue[i].setRandomShape(mode, multiplayer.is_server(), grid.getRemainingColors(),
-				pieceSequence[(pieceSeqIndex + i + 1) % pieceSequence.size()])
+				if i == queue.size() - 1:
+					queue[i].setRandomShape(mode, multiplayer.is_server(), grid.getRemainingColors(),
+					pieceSequence[(pieceSeqIndex + i + 1) % pieceSequence.size()])
+				else:
+					queue[i].setPiece(queue[i + 1])
 		else:
 			playerPiece.setPiece(queue[0])
 			for i in range(0, queue.size() - 1):

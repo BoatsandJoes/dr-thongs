@@ -40,6 +40,28 @@ func _ready():
 	multiplayer.connection_failed.connect(_on_connected_fail)
 	multiplayer.server_disconnected.connect(_on_server_disconnected)
 
+func startEnable():
+	startEnabled = true
+	%Start.disabled = false
+
+func _on_ModeButton_pressed_reverse():
+	if mode == 2:
+		mode = 1
+		%ModeButton.text = "Split Colors"
+		%HowToPlay.text = "Clear the board; you each\nonly get dealt two colors!"
+	elif mode == 0:
+		mode = 2
+		%ModeButton.text = "    Versus   "
+		%HowToPlay.text = "Can Host clear red & yellow\nbefore Joiner clears green & blue?"
+	elif mode == 1:
+		mode = 0
+		%ModeButton.text = "      Coop     "
+		%HowToPlay.text = "Clear the board!"
+	else:
+		mode = 0
+		%ModeButton.text = "      Coop     "
+		%HowToPlay.text = "Clear the board!"
+
 func _on_ModeButton_pressed():
 	if mode == 0:
 		mode = 1
@@ -47,15 +69,15 @@ func _on_ModeButton_pressed():
 		%HowToPlay.text = "Clear the board; you each\nonly get dealt two colors!"
 	elif mode == 1:
 		mode = 2
-		%ModeButton.text = "    Versus    "
+		%ModeButton.text = "    Versus   "
 		%HowToPlay.text = "Can Host clear red & yellow\nbefore Joiner clears green & blue?"
 	elif mode == 2:
 		mode = 0
-		%ModeButton.text = "      Coop      "
+		%ModeButton.text = "      Coop     "
 		%HowToPlay.text = "Clear the board!"
 	else:
 		mode = 0
-		%ModeButton.text = "      Coop      "
+		%ModeButton.text = "      Coop     "
 		%HowToPlay.text = "Clear the board!"
 
 func _on_server_disconnected():
@@ -127,6 +149,7 @@ func load_game(mode: int):
 func _on_Start_pressed():
 	if startEnabled:
 		startEnabled = false
+		%Start.disabled = true
 		load_game.rpc(mode) #If there's a game mode, can pass it here
 
 func _on_Host_pressed():
@@ -193,3 +216,10 @@ func _input(event):
 				_on_Host_pressed()
 			elif %IP.text != null && %IP.text != "":
 				_on_Join_pressed()
+	elif event.is_action_pressed("place"):
+		if %Lobby.visible && %Start.visible && !%Start.disabled:
+			_on_Start_pressed()
+	elif(event.is_action_pressed("down") || event.is_action_pressed("right") || event.is_action_pressed("cw")):
+		_on_ModeButton_pressed()
+	elif(event.is_action_pressed("up") || event.is_action_pressed("left") || event.is_action_pressed("ccw")):
+		_on_ModeButton_pressed_reverse()

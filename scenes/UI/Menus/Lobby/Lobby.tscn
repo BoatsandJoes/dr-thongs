@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3 uid="uid://c3elth5cjxnyr"]
+[gd_scene load_steps=3 format=3 uid="uid://c3elth5cjxnyr"]
 
 [ext_resource type="Script" path="res://scenes/UI/Menus/Lobby/Lobby.gd" id="1_gvias"]
+[ext_resource type="Texture2D" uid="uid://bcwajgqp4asbo" path="res://assets/ui-textures/MenuSwitchIcon.png" id="2_ni5b1"]
 
 [node name="Lobby" type="CanvasLayer"]
 script = ExtResource("1_gvias")
@@ -151,8 +152,11 @@ theme_override_constants/separation = 15
 [node name="ModeButton" type="Button" parent="MarginContainer/VBoxContainer/Lobby/ModeSelect"]
 unique_name_in_owner = true
 layout_mode = 2
+theme_override_constants/h_separation = 10
 theme_override_font_sizes/font_size = 64
-text = "      Coop      "
+text = "      Coop     "
+icon = ExtResource("2_ni5b1")
+icon_alignment = 2
 
 [node name="HowToPlay" type="Label" parent="MarginContainer/VBoxContainer/Lobby/ModeSelect"]
 unique_name_in_owner = true

@@ -73,7 +73,7 @@ func onlineGameBackToLobby():
 @rpc("authority", "call_local", "reliable")
 func processLobby(): #lobby.process_mode = Node.PROCESS_MODE_INHERIT
 	if multiplayer.is_server():
-		lobby.startEnabled = true
+		lobby.startEnable()
 
 @rpc("any_peer", "call_local", "reliable")
 func loadBackIntoLobby():
