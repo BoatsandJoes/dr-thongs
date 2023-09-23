@@ -12,6 +12,11 @@ func _ready():
 	%Options.pressed.connect(_on_Options_pressed)
 	%Exit.pressed.connect(_on_Exit_pressed)
 
+func showAltBackground():
+	$Background.visible = false
+	$AltBackground.visible = true
+	%DrThongs.set_modulate(Color(1,1,1,0))
+
 func _on_Play_pressed():
 	emit_signal("play")
 

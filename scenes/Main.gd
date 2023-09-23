@@ -19,6 +19,7 @@ var sfxMuted = false
 var players_loaded = 0
 var difficulty = 2
 var playersLoadedIntoLobby: int = 0
+var won = false
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
@@ -98,6 +99,8 @@ func navToMode():
 	mode.back.connect(_on_mode_back)
 	mode.start.connect(_on_mode_start)
 	add_child(mode)
+	if won:
+		mode.showAlt()
 	mode.setDifficulty(difficulty)
 
 func _on_mode_start(difficulty):
@@ -115,6 +118,7 @@ func navToGame():
 	gameManager = GameManager.instantiate()
 	gameManager.backToMenu.connect(navToMode)
 	gameManager.setDifficulty(difficulty)
+	gameManager.won_very_hard.connect(_on_gameManager_won_very_hard)
 	add_child(gameManager)
 	if muted:
 		gameManager.muteMusic()
@@ -123,6 +127,9 @@ func navToGame():
 	if sfxMuted:
 		gameManager.muteSfx()
 	gameManager.start_singleplayer_game()
+
+func _on_gameManager_won_very_hard():
+	won = true
 
 func navToMain():
 	remove_child(gameManager)
@@ -143,6 +150,8 @@ func navToMain():
 	mainMenu.options.connect(navToOptions)
 	mainMenu.exit.connect(_on_mainMenu_exit)
 	add_child(mainMenu)
+	if won:
+		mainMenu.showAltBackground()
 
 func navToOptions():
 	remove_child(credits)

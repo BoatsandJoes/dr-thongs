@@ -1,12 +1,20 @@
-[gd_scene load_steps=5 format=3 uid="uid://x2v3b2jhbk7l"]
+[gd_scene load_steps=6 format=3 uid="uid://x2v3b2jhbk7l"]
 
 [ext_resource type="Script" path="res://scenes/UI/Menus/MainMenu/MainMenu.gd" id="1_lq4tu"]
 [ext_resource type="Texture2D" uid="uid://orsd0goy8ho4" path="res://assets/sprites/DrThongsTitle.png" id="2_dgqiu"]
+[ext_resource type="Texture2D" uid="uid://pdlcpp1qprjl" path="res://assets/ui-textures/DrThongsTitleScreenAlt2x.png" id="2_quhkb"]
 [ext_resource type="Texture2D" uid="uid://bmjnp5n6j54ft" path="res://assets/ui-textures/DrThongsTitleScreen.png" id="4_gcuqo"]
 [ext_resource type="Texture2D" uid="uid://brk8o50mj87b3" path="res://assets/sprites/DrThongs2x.png" id="4_ne06x"]
 
 [node name="MainMenu" type="CanvasLayer"]
 script = ExtResource("1_lq4tu")
+
+[node name="AltBackground" type="TextureRect" parent="."]
+visible = false
+offset_right = 40.0
+offset_bottom = 40.0
+texture = ExtResource("2_quhkb")
+stretch_mode = 2
 
 [node name="Background" type="TextureRect" parent="."]
 anchors_preset = 15
@@ -52,6 +60,7 @@ layout_mode = 2
 theme_override_constants/separation = 20
 
 [node name="DrThongs" type="TextureRect" parent="MarginContainer/VBoxContainer/HBoxContainer/TitleElements"]
+unique_name_in_owner = true
 layout_mode = 2
 texture = ExtResource("4_ne06x")
 stretch_mode = 2

@@ -1,9 +1,16 @@
-[gd_scene load_steps=2 format=3 uid="uid://e042srv4cetw"]
+[gd_scene load_steps=3 format=3 uid="uid://e042srv4cetw"]
 
 [ext_resource type="Script" path="res://scenes/UI/Menus/Credits/Credits.gd" id="1_48hw7"]
+[ext_resource type="Texture2D" uid="uid://pdlcpp1qprjl" path="res://assets/ui-textures/DrThongsTitleScreenAlt2x.png" id="2_8qyxe"]
 
 [node name="Credits" type="CanvasLayer"]
 script = ExtResource("1_48hw7")
+
+[node name="TextureRect" type="TextureRect" parent="."]
+offset_right = 40.0
+offset_bottom = 40.0
+texture = ExtResource("2_8qyxe")
+stretch_mode = 2
 
 [node name="MarginContainer" type="MarginContainer" parent="."]
 anchors_preset = 15
@@ -30,34 +37,59 @@ theme_override_constants/separation = 100
 
 [node name="Label" type="Label" parent="MarginContainer/HBoxContainer/VBoxContainer3/VBoxContainer"]
 layout_mode = 2
+theme_override_colors/font_shadow_color = Color(0.0627451, 0.635294, 0.811765, 1)
+theme_override_colors/font_outline_color = Color(0.0352941, 0.333333, 0.580392, 1)
+theme_override_constants/outline_size = 2
+theme_override_constants/shadow_outline_size = 6
 theme_override_font_sizes/font_size = 32
 text = "Design and Programming by BoatsAndJoes"
 
 [node name="Label2" type="Label" parent="MarginContainer/HBoxContainer/VBoxContainer3/VBoxContainer"]
 layout_mode = 2
+theme_override_colors/font_shadow_color = Color(0.0627451, 0.635294, 0.811765, 1)
+theme_override_colors/font_outline_color = Color(0.0352941, 0.333333, 0.580392, 1)
+theme_override_constants/outline_size = 2
+theme_override_constants/shadow_outline_size = 6
 theme_override_font_sizes/font_size = 32
 text = "Art by Lunaticker"
 
 [node name="Label3" type="Label" parent="MarginContainer/HBoxContainer/VBoxContainer3/VBoxContainer"]
 layout_mode = 2
+theme_override_colors/font_shadow_color = Color(0.0627451, 0.635294, 0.811765, 1)
+theme_override_colors/font_outline_color = Color(0.0352941, 0.333333, 0.580392, 1)
+theme_override_constants/outline_size = 2
+theme_override_constants/shadow_outline_size = 6
 theme_override_font_sizes/font_size = 32
 text = "Sound effects by Kenney www.kenney.nl"
 
 [node name="Label4" type="Label" parent="MarginContainer/HBoxContainer/VBoxContainer3/VBoxContainer"]
 layout_mode = 2
+theme_override_colors/font_shadow_color = Color(0.0627451, 0.635294, 0.811765, 1)
+theme_override_colors/font_outline_color = Color(0.0352941, 0.333333, 0.580392, 1)
+theme_override_constants/outline_size = 2
+theme_override_constants/shadow_outline_size = 6
 theme_override_font_sizes/font_size = 32
-text = "Online testing by Algosith"
+text = "Online testing by Lunaticker and Algosith"
 
 [node name="Label4" type="Label" parent="MarginContainer/HBoxContainer/VBoxContainer3"]
 layout_mode = 2
+theme_override_colors/font_shadow_color = Color(0.0627451, 0.635294, 0.811765, 1)
+theme_override_colors/font_outline_color = Color(0.0352941, 0.333333, 0.580392, 1)
+theme_override_constants/outline_size = 2
+theme_override_constants/shadow_outline_size = 6
 theme_override_font_sizes/font_size = 32
 text = "© BoatsAndJoes 2023. All rights reserved"
 
 [node name="VBoxContainer2" type="VBoxContainer" parent="MarginContainer/HBoxContainer"]
 layout_mode = 2
+alignment = 2
 
 [node name="Label5" type="Label" parent="MarginContainer/HBoxContainer/VBoxContainer2"]
 layout_mode = 2
+theme_override_colors/font_shadow_color = Color(0.0627451, 0.635294, 0.811765, 1)
+theme_override_colors/font_outline_color = Color(0.0352941, 0.333333, 0.580392, 1)
+theme_override_constants/outline_size = 2
+theme_override_constants/shadow_outline_size = 6
 text = "Tropical Soul by Luke Bergs | https://soundcloud.com/bergscloud/
 Music promoted by https://www.chosic.com/free-music/all/
 Creative Commons CC BY-SA 3.0

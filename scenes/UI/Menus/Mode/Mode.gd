@@ -18,6 +18,11 @@ func _ready():
 	%Start.pressed.connect(_on_Start_pressed)
 	%Back.pressed.connect(_on_Back_pressed)
 
+func showAlt():
+	$AltBackground.visible = true
+	$Background.visible = false
+	thongs.visible = false
+
 func _on_Start_pressed():
 	emit_signal("start", difficulty)
 

@@ -41,6 +41,7 @@ var enableQuickExit: bool = false
 signal backToMenu
 signal loaded_multiplayer
 signal disconnected
+signal won_very_hard
 var voiceMuted: bool = false
 var sfxMuted: bool = false
 var musicMuted: bool = false
@@ -308,6 +309,8 @@ func _on_grid_victory():
 			grid.setCells(Globals.PieceColor.Green, range(1, grid.board.size(), 4), {})
 			grid.setCells(Globals.PieceColor.Blue, range(2, grid.board.size(), 4), {})
 			grid.setCells(Globals.PieceColor.Yellow, range(3, grid.board.size(), 4), {})
+			if !multiFlag:
+				emit_signal("won_very_hard")
 		hud.updateResult("You Win!")
 		if !sfxMuted:
 			gameEndSfx.stream = VictorySfx
