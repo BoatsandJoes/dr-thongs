@@ -238,7 +238,7 @@ func canPlace(playerPiece: Piece, pieceXIndex: int, pieceYIndex: int) -> bool:
 func placePieceIntoBoard(cells: PackedInt32Array, color: int, boardToPlaceInto: PackedInt32Array):
 	var result: PackedInt32Array = PackedInt32Array(boardToPlaceInto)
 	for cell in cells:
-		if result[cell] == color:
+		if result[cell] == color: #todo one time out of bounds 169
 			return null
 		result[cell] = color
 	return result

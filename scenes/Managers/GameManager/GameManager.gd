@@ -324,7 +324,8 @@ func _on_grid_clearStart():
 
 func _on_grid_clearsComplete():
 	if !won:
-		thongs.unflex()
+		if thongs.isFlex():
+			thongs.unflex()
 		gameTimer.paused = false
 		if !playerPiece.visible:
 			advanceQueue()
@@ -404,13 +405,12 @@ func spin(direction: int):
 				shifted = true
 		if shifted:
 			break
-	#todo das to wall (very minor qol)
 	playerPiece.spin(direction)
 	if multiFlag:
 		rotateGhost.rpc(playerPiece.state)
 
 func drawPlayerPiecePosition():
-	if multiFlag: #todo
+	if multiFlag:
 		playerPiece.position = Vector2i(50 + pieceXIndex * grid.cellSize,
 		35 + pieceYIndex * grid.cellSize)
 	else:
@@ -512,6 +512,9 @@ func _input(event):
 		elif grid.place(playerPiece, pieceXIndex, pieceYIndex):
 			advanceQueue()
 
+#xxx hide ghost on lose or win
+#todo split colors ending
+
 @rpc("any_peer", "call_remote", "reliable")
 func placeAndResimulate(seqIndex: int, x: int, y: int, rotate: int, timeElapsed: float, color: int):
 	mutex.lock()
@@ -526,7 +529,6 @@ func placeAndResimulate(seqIndex: int, x: int, y: int, rotate: int, timeElapsed:
 			state = previousStates[i]
 		elif ((state.playerId == 1 && !multiplayer.is_server())
 		|| (state.playerId != 1 && multiplayer.is_server())):
-			print("It happened remote! ", state.playerId, state.cellIndexes, state.cellsColor, ghostSeq[ghostSeqIndex], x, y, rotate, color)
 			#two placements in one frame: ignore. I think this is paranoid coding though.
 			mutex.unlock()
 			return false
@@ -584,14 +586,7 @@ func placeAndResimulate(seqIndex: int, x: int, y: int, rotate: int, timeElapsed:
 			else:
 				var nextBoard = grid.placePieceIntoBoard(resimulateState.cellIndexes,
 				resimulateState.cellsColor, prevBoard)
-				print("resimulate remote:")
-				print("prev board: ", prevBoard)
-				print("resimulate state: ", resimulateState.cellIndexes, resimulateState.cellsColor, resimulateState.playerId)
-				print("next board: ", nextBoard)
-				print("\n\n\n")
 				if nextBoard == null:
-					print("REMOTE BONK! Old Board: ", prevBoard)
-					print("Placement: ", resimulateState.cellIndexes, resimulateState.cellsColor, resimulateState.playerId)
 					#Bonk. All later states for this id should be removed.
 					resimulateState.board = prevBoard
 					statesToRemove.append(r)
@@ -606,6 +601,8 @@ func placeAndResimulate(seqIndex: int, x: int, y: int, rotate: int, timeElapsed:
 					if boardAfterClears != null:
 						nextBoard = boardAfterClears["clearedBoard"]
 						clearedCells = clearedBoard["clears"]
+						#todo Invalid get index 'clears' (on base: 'Nil').
+						#at: GameManager.placeAndResimulate (res://scenes/Managers/GameManager/GameManager.gd:608)
 						allClears.append_array(clearedCells)
 						#todo the way we handle clear delay here should be a tiny bit different.
 			#			if grid.clearDelay.is_stopped():
@@ -617,6 +614,7 @@ func placeAndResimulate(seqIndex: int, x: int, y: int, rotate: int, timeElapsed:
 					clearedCells, resimulateState.pieceSeqIndex)
 		#visual update of clears
 		grid.updateClearsMulti(allClears)
+		#todo log array and look for ints
 		for v in range(statesToRemove.size() - 1, -1, -1):
 			previousStates.remove_at(statesToRemove[v])
 		#todo only update cells that have changed, instead of all.
@@ -644,7 +642,6 @@ func placeAndResimulateLocal() -> bool:
 			state = previousStates[i]
 		elif ((state.playerId == 1 && multiplayer.is_server())
 		|| (state.playerId != 1 && !multiplayer.is_server())):
-			print("It happened local! ", state.playerId, state.cellIndexes, state.cellsColor, playerPiece.color, playerPiece.getCurrentShape(), pieceXIndex, pieceYIndex)
 			#two placements in one frame: ignore. I think this is paranoid coding though.
 			mutex.unlock()
 			return false
@@ -696,15 +693,8 @@ func placeAndResimulateLocal() -> bool:
 			else:
 				var nextBoard = grid.placePieceIntoBoard(resimulateState.cellIndexes,
 				resimulateState.cellsColor, prevBoard)
-				print("resimulate local:")
-				print("prev board: ", prevBoard)
-				print("resimulate state: ", resimulateState.cellIndexes, resimulateState.cellsColor, resimulateState.playerId)
-				print("next board: ", nextBoard)
-				print("\n\n\n")
 				if nextBoard == null:
 					#Bonk. All later states for this id should be removed.
-					print("BONK! Old Board: ", prevBoard)
-					print("Placement: ", resimulateState.cellIndexes, resimulateState.cellsColor, resimulateState.playerId)
 					resimulateState.board = prevBoard
 					statesToRemove.append(r)
 					if resimulateState.playerId == 1:
@@ -761,7 +751,7 @@ func updateQueueToIndex(index):
 
 func advanceGhostQueue():
 	ghostPiece.visible = true
-	ghostPiece.setRandomShape(mode, multiplayer.is_server(), grid.getRemainingColors(),
+	ghostPiece.setRandomShape(mode, !multiplayer.is_server(), grid.getRemainingColors(),
 	ghostSeq[ghostSeqIndex % ghostSeq.size()])
 	ghostPieceYIndex = grid.gridHeight / 2 - 2
 	if multiplayer.is_server():
