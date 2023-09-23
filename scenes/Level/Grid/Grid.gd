@@ -261,7 +261,7 @@ func place(playerPiece: Piece, pieceXIndex: int, pieceYIndex: int) -> bool:
 				return false
 			cells.append(flatIndex)
 		elif piece[i] == 1:
-			#TODO update neighbors of different colors, because godot 4 won't
+			#update neighbors of different colors, because godot 4 won't
 			var cellIndex: Vector2i = Vector2i(pieceXIndex + i % 5, pieceYIndex + i / 5)
 			var flatIndex: int = getFlatIndex(cellIndex)
 			var color

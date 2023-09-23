@@ -513,7 +513,6 @@ func _input(event):
 			advanceQueue()
 
 #xxx hide ghost on lose or win
-#todo split colors ending
 
 @rpc("any_peer", "call_remote", "reliable")
 func placeAndResimulate(seqIndex: int, x: int, y: int, rotate: int, timeElapsed: float, color: int):
@@ -599,7 +598,7 @@ func placeAndResimulate(seqIndex: int, x: int, y: int, rotate: int, timeElapsed:
 					var boardAfterClears = grid.removeAllClears(nextBoard)
 					if boardAfterClears != null:
 						nextBoard = boardAfterClears["clearedBoard"]
-						clearedCells = clearedBoard["clears"]
+						clearedCells = boardAfterClears["clears"]
 						#todo Invalid get index 'clears' (on base: 'Nil').
 						#at: GameManager.placeAndResimulate (res://scenes/Managers/GameManager/GameManager.gd:608)
 						allClears.append_array(clearedCells)
@@ -706,7 +705,7 @@ func placeAndResimulateLocal() -> bool:
 					var boardAfterClears = grid.removeAllClears(nextBoard)
 					if boardAfterClears != null:
 						nextBoard = boardAfterClears["clearedBoard"]
-						clearedCells = clearedBoard["clears"]
+						clearedCells = boardAfterClears["clears"]
 						allClears.append_array(clearedCells)
 						#todo the way we handle clear delay here should be a tiny bit different.
 			#			if grid.clearDelay.is_stopped():
