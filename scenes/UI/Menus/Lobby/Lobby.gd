@@ -87,7 +87,6 @@ func _on_player_disconnected(id):
 	player_info.erase(id)
 	player_disconnected.emit(id)
 	%ConnectStatus.text = "Waiting..."
-	%ModeSelect.visible = false
 	%Start.disabled = true
 
 func _on_Exit_pressed():
@@ -154,7 +153,6 @@ func openLobby():
 	%Start.disabled = true
 	%Lobby.visible = true
 	if hosting:
-		%ModeSelect.visible = false
 		%Start.visible = true
 		%ModeSelect.visible = true
 		%Mode.text = "Hosting"
