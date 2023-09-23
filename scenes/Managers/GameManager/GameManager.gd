@@ -776,11 +776,18 @@ func advanceQueue():
 	if !grid.clearing:
 		playerPiece.visible = true
 		pieceSeqIndex += 1
-		playerPiece.setRandomShape(mode, multiplayer.is_server(), grid.getRemainingColors(),
-		pieceSequence[pieceSeqIndex % pieceSequence.size()])
-		for i in queue.size():
-			queue[i].setRandomShape(mode, multiplayer.is_server(), grid.getRemainingColors(),
-			pieceSequence[(pieceSeqIndex + i + 1) % pieceSequence.size()])
+		if multiFlag:
+			playerPiece.setRandomShape(mode, multiplayer.is_server(), grid.getRemainingColors(),
+			pieceSequence[pieceSeqIndex % pieceSequence.size()])
+			for i in queue.size():
+				queue[i].setRandomShape(mode, multiplayer.is_server(), grid.getRemainingColors(),
+				pieceSequence[(pieceSeqIndex + i + 1) % pieceSequence.size()])
+		else:
+			playerPiece.setPiece(queue[0])
+			for i in range(0, queue.size() - 1):
+				queue[i].setPiece(queue[i + 1])
+			queue[queue.size() - 1].setShape(playerPiece.shapes[randi_range(0, playerPiece.shapes.size() -1)],
+			randi_range(0, 3), grid.remainingColors[randi_range(0, grid.remainingColors.size() - 1)])
 		pieceYIndex = grid.gridHeight / 2 - 2
 		if multiFlag:
 			if multiplayer.is_server():
