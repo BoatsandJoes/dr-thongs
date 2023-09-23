@@ -22,42 +22,27 @@ func _ready():
 
 func setVolume(vol: float):
 	vol = vol - 6.0
-	if vol < -60.0:
+	if vol < -30.0:
 		vol = 0.0
 	volumeLevel = vol
 	_on_Volume_pressed()
 
 func _on_Volume_pressed():
 	if volumeLevel == 0.0:
-		volumeLevel = -60.0
-		%Volume.text = "Volume 0%"
-	elif volumeLevel == -60.0:
-		volumeLevel = -54.0
-		%Volume.text = "Volume 10%"
-	elif volumeLevel == -54.0:
-		volumeLevel = -48.0
-		%Volume.text = "Volume 20%"
-	elif volumeLevel == -48.0:
-		volumeLevel = -42.0
-		%Volume.text = "Volume 30%"
-	elif volumeLevel == -42.0:
-		volumeLevel = -36.0
-		%Volume.text = "Volume 40%"
-	elif volumeLevel == -36.0:
 		volumeLevel = -30.0
-		%Volume.text = "Volume 50%"
+		%Volume.text = "Volume 0%"
 	elif volumeLevel == -30.0:
 		volumeLevel = -24.0
-		%Volume.text = "Volume 60%"
+		%Volume.text = "Volume 20%"
 	elif volumeLevel == -24.0:
 		volumeLevel = -18.0
-		%Volume.text = "Volume 70%"
+		%Volume.text = "Volume 40%"
 	elif volumeLevel == -18.0:
 		volumeLevel = -12.0
-		%Volume.text = "Volume 80%"
+		%Volume.text = "Volume 60%"
 	elif volumeLevel == -12.0:
 		volumeLevel = -6.0
-		%Volume.text = "Volume 90%"
+		%Volume.text = "Volume 80%"
 	elif volumeLevel == -6.0:
 		volumeLevel = 0.0
 		%Volume.text = "Volume 100%"
