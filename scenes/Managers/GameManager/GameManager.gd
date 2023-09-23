@@ -333,12 +333,12 @@ func _on_grid_clearsComplete():
 
 func _on_horizontalDas_timeout():
 	shiftPiece(horizontalDirection, 0)
-	horizontalDas.wait_time = 1.0/30.0
+	horizontalDas.wait_time = 1.0/60.0
 	horizontalDas.start()
 
 func _on_verticalDas_timeout():
 	shiftPiece(0, verticalDirection)
-	verticalDas.wait_time = 1.0/30.0
+	verticalDas.wait_time = 1.0/60.0
 	verticalDas.start()
 
 func shiftPiece(horizontal: int, vertical: int):
