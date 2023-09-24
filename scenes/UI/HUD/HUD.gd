@@ -20,7 +20,7 @@ func muteCountdown():
 	playedCountdown = 0
 
 func updateResult(text: String):
-	if text == "     You Lose":
+	if text == "     You Lose" || text == " You Lose":
 		%Lose.text = text
 	else:
 		%Win.text = text

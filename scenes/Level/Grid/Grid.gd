@@ -10,6 +10,7 @@ var clearing: bool = false
 var remainingColors: Array[int]
 var sfxMuted: bool = false
 var difficulty: int = 2
+var mode: int = 0
 signal victory
 signal lost
 signal clearStart
@@ -96,9 +97,29 @@ func init():
 			pieceMap[color].append(i)
 			if !remainingColors.has(color):
 				remainingColors.append(color)
-	#debug cheater win
-	#pieceMap[1].append(16)
-	#remainingColors.append(1)
+	#balance colors for versus
+	if mode == 2:
+		var serverCount: int = 0
+		var clientCount: int = 0
+		for color in pieceMap.keys():
+			if color == Globals.PieceColor.Blue || color == Globals.PieceColor.Green:
+				clientCount += pieceMap[color].size()
+			else:
+				serverCount += pieceMap[color].size()
+		if serverCount < clientCount:
+			var greenBlueToRemove: int = clientCount - serverCount
+			for i in greenBlueToRemove:
+				var color = null
+				while color == null:
+					color = [Globals.PieceColor.Green, Globals.PieceColor.Blue][randi_range(0, 1)]
+				pieceMap[color].remove_at(randi_range(0, pieceMap[color].size() - 1))
+		elif serverCount > clientCount:
+			var redYellowToRemove: int = serverCount - clientCount
+			for i in redYellowToRemove:
+				var color = null
+				while color == null:
+					color = [Globals.PieceColor.Red, Globals.PieceColor.Yellow][randi_range(0, 1)]
+				pieceMap[color].remove_at(randi_range(0, pieceMap[color].size() - 1))
 	for color in pieceMap.keys():
 		setCells(color, pieceMap[color], {})
 
@@ -353,6 +374,19 @@ func removeAllClears(board:PackedInt32Array):
 		return {"clearedBoard": board, "clears": clears}
 	else:
 		return null
+
+func checkWinner(isServer: bool) -> bool:
+	var serverCount: int = 0
+	var clientCount: int = 0
+	for cell in board:
+		if cell == Globals.PieceColor.Yellow || cell == Globals.PieceColor.Red:
+			serverCount += 1
+		elif cell == Globals.PieceColor.Blue || cell == Globals.PieceColor.Green:
+			clientCount += 1
+	if (isServer && serverCount < clientCount) || (!isServer && clientCount < serverCount):
+		return true
+	else:
+		return false
 
 func updateClearsMulti(clears: Array):
 	if clears.size() > 0:

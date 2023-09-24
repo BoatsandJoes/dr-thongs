@@ -73,6 +73,7 @@ func _ready():
 	grid.victory.connect(_on_grid_victory)
 	grid.lost.connect(_on_grid_lost)
 	grid.difficulty = difficulty
+	grid.mode = mode
 	add_child(grid)
 	grid.init()
 	ghostPiece = Piece.instantiate()
@@ -235,7 +236,8 @@ func _on_pingTimer_timeout():
 	if mode != 2:
 		gameTimer.start()
 	else:
-		hud.hideTimer()
+		gameTimer.wait_time = 180
+		gameTimer.start()
 	playerPiece.visible = true
 
 func setDifficulty(difficulty: int):
@@ -261,7 +263,7 @@ func _on_music_finished():
 func _on_gameEndSfx_finished():
 	if !voicePlayed:
 		gameEndSfx.set_bus("Reduce")
-		if !gameTimer.is_stopped() || (mode == 2 && thongs.isFlex()):
+		if (mode != 2 && !gameTimer.is_stopped()) || (mode == 2 && thongs.isFlex()):
 			gameEndSfx.stream = VictoryVoice
 		else:
 			gameEndSfx.stream = GameOverVoice
@@ -280,13 +282,25 @@ func _on_grid_lost():
 func _on_gameTimer_timeout():
 	music.stop()
 	playerPiece.visible = false
-	hud.updateResult("     You Lose")
-	thongs.lose()
-	if !sfxMuted:
-		gameEndSfx.stream = GameOverSfx
-		gameEndSfx.play()
-	elif !voiceMuted:
-		_on_gameEndSfx_finished()
+	if mode == 2:
+		if grid.checkWinner(multiplayer.is_server()):
+			_on_grid_victory()
+		else:
+			hud.updateResult(" You Lose")
+			thongs.lose()
+			if !sfxMuted:
+				gameEndSfx.stream = GameOverSfx
+				gameEndSfx.play()
+			elif !voiceMuted:
+				_on_gameEndSfx_finished()
+	else:
+		hud.updateResult("     You Lose")
+		thongs.lose()
+		if !sfxMuted:
+			gameEndSfx.stream = GameOverSfx
+			gameEndSfx.play()
+		elif !voiceMuted:
+			_on_gameEndSfx_finished()
 
 func _on_grid_victory():
 	if false: #multiFlag:

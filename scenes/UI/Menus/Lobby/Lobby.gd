@@ -45,40 +45,42 @@ func startEnable():
 	%Start.disabled = false
 
 func _on_ModeButton_pressed_reverse():
-	if mode == 2:
-		mode = 1
-		%ModeButton.text = "Split Colors"
-		%HowToPlay.text = "Clear the board; you each\nonly get dealt two colors!"
-	elif mode == 0:
-		mode = 2
-		%ModeButton.text = "    Versus   "
-		%HowToPlay.text = "Can Host clear red & yellow\nbefore Joiner clears green & blue?"
-	elif mode == 1:
-		mode = 0
-		%ModeButton.text = "      Coop     "
-		%HowToPlay.text = "Clear the board!"
-	else:
-		mode = 0
-		%ModeButton.text = "      Coop     "
-		%HowToPlay.text = "Clear the board!"
+	if %ModeSelect.visible:
+		if mode == 2:
+			mode = 1
+			%ModeButton.text = "Split Colors"
+			%HowToPlay.text = "Clear the board; you each\nonly get dealt two colors!"
+		elif mode == 0:
+			mode = 2
+			%ModeButton.text = "    Versus   "
+			%HowToPlay.text = "Can Host clear red & yellow\nbefore Joiner clears green & blue?"
+		elif mode == 1:
+			mode = 0
+			%ModeButton.text = "      Coop     "
+			%HowToPlay.text = "Clear the board!"
+		else:
+			mode = 0
+			%ModeButton.text = "      Coop     "
+			%HowToPlay.text = "Clear the board!"
 
 func _on_ModeButton_pressed():
-	if mode == 0:
-		mode = 1
-		%ModeButton.text = "Split Colors"
-		%HowToPlay.text = "Clear the board; you each\nonly get dealt two colors!"
-	elif mode == 1:
-		mode = 2
-		%ModeButton.text = "    Versus   "
-		%HowToPlay.text = "Can Host clear red & yellow\nbefore Joiner clears green & blue?"
-	elif mode == 2:
-		mode = 0
-		%ModeButton.text = "      Coop     "
-		%HowToPlay.text = "Clear the board!"
-	else:
-		mode = 0
-		%ModeButton.text = "      Coop     "
-		%HowToPlay.text = "Clear the board!"
+	if %ModeSelect.visible:
+		if mode == 0:
+			mode = 1
+			%ModeButton.text = "Split Colors"
+			%HowToPlay.text = "Clear the board; you each\nonly get dealt two colors!"
+		elif mode == 1:
+			mode = 2
+			%ModeButton.text = "    Versus   "
+			%HowToPlay.text = "Can Host clear red & yellow\nbefore Joiner clears green & blue?"
+		elif mode == 2:
+			mode = 0
+			%ModeButton.text = "     Co-Op    "
+			%HowToPlay.text = "Clear the board!"
+		else:
+			mode = 0
+			%ModeButton.text = "     Co-Op    "
+			%HowToPlay.text = "Clear the board!"
 
 func _on_server_disconnected():
 	%ConnectStatus.text = "Host disconnected"

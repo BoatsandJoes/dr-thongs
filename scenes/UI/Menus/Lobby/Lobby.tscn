@@ -154,7 +154,7 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/h_separation = 10
 theme_override_font_sizes/font_size = 64
-text = "      Coop     "
+text = "     Co-Op    "
 icon = ExtResource("2_ni5b1")
 icon_alignment = 2
 
