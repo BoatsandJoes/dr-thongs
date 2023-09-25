@@ -20,10 +20,11 @@ var players_loaded = 0
 var difficulty = 2
 var playersLoadedIntoLobby: int = 0
 var won = false
-var volume: float = -6.0
+var volume: float = -9.0
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
+	setVol()
 	navToMain()
 
 func _on_Options_volume(volume):
@@ -31,7 +32,7 @@ func _on_Options_volume(volume):
 	setVol()
 
 func setVol():
-	if volume <= -60.0:
+	if volume <= -24.0:
 		AudioServer.set_bus_mute(AudioServer.get_bus_index("Master"), true)
 	else:
 		AudioServer.set_bus_mute(AudioServer.get_bus_index("Master"), false)
