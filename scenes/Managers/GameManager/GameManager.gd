@@ -53,9 +53,15 @@ var pingTimer: Timer
 var pingTestTimeElapsed: float
 var pingTestCount: int = 0
 var mutex: Mutex
+var placeTimer: Timer
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
+	placeTimer = Timer.new()
+	placeTimer.autostart = false
+	placeTimer.one_shot = true
+	placeTimer.wait_time = 0.025
+	add_child(placeTimer)
 	mutex = Mutex.new()
 	music = AudioStreamPlayer.new()
 	music.set_bus("Reduce")
@@ -520,7 +526,8 @@ func _input(event):
 		spin(1)
 	elif event.is_action_pressed("ccw"):
 		spin(-1)
-	elif event.is_action_pressed("place") && playerPiece.visible:
+	elif event.is_action_pressed("place") && playerPiece.visible && placeTimer.is_stopped():
+		placeTimer.start()
 		if multiFlag:
 			placeAndResimulateLocal()
 		elif grid.place(playerPiece, pieceXIndex, pieceYIndex):
